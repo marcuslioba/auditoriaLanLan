@@ -150,6 +150,15 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
 .pthumb-del{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--rd);color:#fff;border:none;border-radius:50%;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .wiz-footer{display:flex;gap:10px;margin-top:16px;position:sticky;bottom:calc(var(--navh) + 8px);background:var(--g50);padding:8px 0;z-index:50}
 .wiz-footer .btn{flex:1;justify-content:center}
+/* ASSINATURA NO WIZARD */
+.wiz-sig-section{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-top:3px solid var(--or)}
+.wiz-sig-title{font-family:"Nunito",sans-serif;font-weight:900;font-size:16px;margin-bottom:4px;color:var(--g800)}
+.wiz-sig-sub{font-size:12px;color:var(--g400);margin-bottom:14px}
+.sig-wrap{border:2px solid var(--g200);border-radius:12px;overflow:hidden;background:#FAFAFA;cursor:crosshair;touch-action:none}
+.sig-wrap.signed{border-color:var(--gn);background:#F0FDF4}
+.sig-wrap.error{border-color:var(--rd);background:#FFF5F5;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#wiz-sigc{width:100%;display:block}
 /* MODAL */
 .moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-end}
 .moverlay.open{display:flex;animation:fi .2s}
@@ -490,7 +499,7 @@ async function doLogin(){
   document.getElementById("lbtxt").innerHTML='<span class="spin"></span>';
   await loadAll();
   if(pin==="000000"){user={id:"admin",nome:"Administrador",cargo:"admin",pin:"000000"};loginOk();return;}
-  var a=db.auditores.find(function(x){return x.pin===pin;});
+  var a=db.auditores.find(function(x){return String(x.pin)===String(pin)||String(x.telefone)===String(pin);});
   if(a){user=a;loginOk();}else{document.getElementById("lbtxt").textContent="Entrar →";showLerr("PIN incorreto.");}
 }
 function loginOk(){
@@ -498,8 +507,8 @@ function loginOk(){
   document.getElementById("hdruser").textContent=user.nome;document.getElementById("hdrbadge").textContent=user.cargo||"auditor";
   document.getElementById("lerr").style.display="none";document.getElementById("lbtxt").textContent="Entrar →";
   document.getElementById("pinin").value="";for(var i=0;i<6;i++){var d=document.getElementById("pd"+i);if(d)d.className="pin-dot";}
-  var cargo=(user.cargo||"").toLowerCase();
-  if(cargo==="auditor"){
+  var cargo=String(user.cargo||"").toLowerCase();
+  if(cargo!=="admin"){
     document.getElementById("bnav").style.display="none";document.getElementById("pg-auditor").style.display="block";
     document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
     document.getElementById("aud-greet").textContent=user.nome.split(" ")[0];renderAudHist();
@@ -525,14 +534,28 @@ function showLerr(msg){var el=document.getElementById("lerr");el.textContent=msg
 // NAVEGAÇÃO
 // ============================================================
 function showP(name,btn){
-  var cargo=(user&&user.cargo||"").toLowerCase();
-  if(cargo==="auditor"&&name!=="exec")return;
+  var cargo=String(user&&user.cargo||"").toLowerCase();
+  if(cargo!=="admin"&&name!=="exec")return;
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
   document.querySelectorAll(".nitem").forEach(function(n){n.classList.remove("active");});
   var pg=document.getElementById("pg-"+name);if(pg)pg.classList.add("active");if(btn)btn.classList.add("active");
   if(name==="exec")popExec();if(name==="dash"){updDash();popFilterAuditores();}
 }
-function irParaExec(){document.getElementById("pg-auditor").style.display="none";document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});document.getElementById("pg-exec").classList.add("active");popExec();}
+function irParaExec(){
+  // Reseta estado da auditoria anterior
+  curAud={}; wizStep=0; wizSecs=[];
+  geoStatus="idle"; geoOk=false; geoData=null;
+  // Garante que o setup aparece e o wizard some
+  var setup=document.getElementById("exec-setup");
+  var wiz=document.getElementById("exec-wiz");
+  if(setup){ setup.style.display="block"; }
+  if(wiz){ wiz.style.display="none"; wiz.innerHTML=""; }
+  // Navega para a página
+  document.getElementById("pg-auditor").style.display="none";
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+  document.getElementById("pg-exec").classList.add("active");
+  popExec();
+}
 function stab(name){["lojas","auds","cargos"].forEach(function(n){var t=document.getElementById("tl-"+n),tb=document.getElementById("tab-"+n);if(t)t.classList.remove("active");if(tb)tb.style.display="none";});document.getElementById("tl-"+name).classList.add("active");document.getElementById("tab-"+name).style.display="block";}
 function stab2(name){["cls","cats"].forEach(function(n){document.getElementById("tl-"+n).classList.remove("active");document.getElementById("tab-"+n).style.display="none";});document.getElementById("tl-"+name).classList.add("active");document.getElementById("tab-"+name).style.display="block";}
 function openM(id){document.getElementById(id).classList.add("open");}function closeM(id){document.getElementById(id).classList.remove("open");}
@@ -666,12 +689,23 @@ function popExec(){
   var lEl=document.getElementById("ex-loja"),cEl=document.getElementById("ex-cl");
   lEl.innerHTML="<option value=''>Selecione a loja...</option>"+db.lojas.map(function(l){return "<option value='"+l.id+"'>"+esc(l.nome)+"</option>";}).join("");
   // Filtra checklists pelo cargo do usuário (regra de negócio)
-  var cargo=(user&&user.cargo||"").toLowerCase();
+  var cargo=String(user&&user.cargo||"").toLowerCase();
   var clsVis=db.checklists.filter(function(cl){
     var perm=cl.cargosPermitidos||[];
     if(!perm.length)return true;          // sem restrição = todos
     if(cargo==="admin")return true;       // admin vê tudo
-    return perm.indexOf(cargo)>=0||perm.indexOf(user&&user.id)>=0;
+    // Monta lista de identificadores do usuário para comparar
+    // Inclui: cargo atual, id do usuário, e o id do cargo na tabela cargos
+    var userIds=[String(user.cargo||""), String(user.id||"")];
+    // Busca o cargo do usuário na tabela de cargos pelo nome ou id
+    var cargoObj=db.cargos.find(function(c){
+      return String(c.id)===String(user.cargo)||String(c.nome).toLowerCase()===cargo;
+    });
+    if(cargoObj) userIds.push(String(cargoObj.id));
+    // Verifica se algum dos identificadores do usuário está na lista de permissões
+    return perm.some(function(p){
+      return userIds.indexOf(String(p))>=0;
+    });
   });
   cEl.innerHTML="<option value=''>Selecione o checklist...</option>"+clsVis.map(function(c){return "<option value='"+c.id+"'>"+esc(c.nome)+" ("+(c.items||[]).length+" itens)</option>";}).join("");
   geoStatus="idle";geoOk=false;document.getElementById("geo-area").innerHTML="";
@@ -707,6 +741,8 @@ function buildWizard(cl,loja){
     catMap[cn].items.push({item:item,idx:idx});
   });
   if(!wizSecs.length)wizSecs=[{catName:"Itens",catEmoji:"📋",items:[]}];
+  // Adiciona seção especial de assinaturas como última etapa
+  wizSecs.push({catName:"Assinaturas",catEmoji:"✍️",items:[],isSigStep:true});
   wizStep=0;renderWizard(cl,loja);
 }
 
@@ -724,54 +760,275 @@ function renderWizard(cl,loja){
   // Pills de navegação por seção
   html+="<div class='wiz-nav'>";
   wizSecs.forEach(function(sec,si){
-    var sd=sec.items.filter(function(e){return curAud.respostas[e.idx]!==undefined;}).length;
-    var st=sec.items.length;
-    var pc=si===wizStep?"active":sd===st&&st>0?"done":sd>0?"partial":"";
-    html+="<div class='wiz-nav-pill "+pc+"' onclick='goToSection("+si+")'>"+sec.catEmoji+" "+esc(sec.catName)+" <span style='opacity:.7;font-size:10px'>("+sd+"/"+st+")</span></div>";
+    var pc, label;
+    if(sec.isSigStep){
+      // Pill da etapa de assinaturas
+      var sigDone = !!curAud.sig_aud;
+      pc = si===wizStep?"active":sigDone?"done":"";
+      label = sec.catEmoji+" "+esc(sec.catName)+(sigDone?" <span style='opacity:.7;font-size:10px'>✓</span>":"");
+    } else {
+      var sd=sec.items.filter(function(e){return curAud.respostas[e.idx]!==undefined;}).length;
+      var st=sec.items.length;
+      pc=si===wizStep?"active":sd===st&&st>0?"done":sd>0?"partial":"";
+      label=sec.catEmoji+" "+esc(sec.catName)+" <span style='opacity:.7;font-size:10px'>("+sd+"/"+st+")</span>";
+    }
+    html+="<div class='wiz-nav-pill "+pc+"' onclick='goToSection("+si+")'>"+label+"</div>";
   });
   html+="</div>";
 
   // Seções — só a ativa é visível
   wizSecs.forEach(function(sec,si){
-    var sd=sec.items.filter(function(e){return curAud.respostas[e.idx]!==undefined;}).length;
-    html+="<div class='wiz-section"+(si===wizStep?" active":"")+"' id='wiz-sec-"+si+"'>"+
-      "<div class='wiz-sec-hdr'><span class='sec-emoji'>"+sec.catEmoji+"</span><span class='sec-name'>"+esc(sec.catName)+"</span><span class='sec-counter'>"+sd+" / "+sec.items.length+"</span></div>";
-    sec.items.forEach(function(entry){
-      var item=entry.item,idx=entry.idx,resp=curAud.respostas[idx];
-      html+="<div class='wiz-item"+(resp?" answered-"+resp:"")+"' id='wi-"+idx+"'>"+
-        "<div class='wiz-item-q'>"+(idx+1)+". "+esc(item.pergunta)+"</div>"+
-        "<div class='wiz-item-meta'><span class='wbadge'>Peso "+(item.peso||1)+"</span>"+(item.fotoObrig?"<span class='fotobadge'>📷 Obrigatória</span>":"")+"</div>"+
-        "<div class='wiz-abts'>"+
-          "<button class='wiz-abt cf"+(resp==="cf"?" sel":"")+"' onclick='setAns("+idx+",\"cf\",this)'>✅<br>Conforme</button>"+
-          "<button class='wiz-abt nc"+(resp==="nc"?" sel":"")+"' onclick='setAns("+idx+",\"nc\",this)'>❌<br>Não<br>Conforme</button>"+
-          "<button class='wiz-abt na"+(resp==="na"?" sel":"")+"' onclick='setAns("+idx+",\"na\",this)'>➖<br>N/A</button>"+
-        "</div>"+
-        "<div class='wiz-obs'><input type='text' placeholder='Observação...' value='"+esc(curAud.obs[idx]||"")+"' onchange='setObs("+idx+",this.value)'></div>"+
-        "<label class='wiz-photobtn"+((curAud.fotos[idx]||[]).length>0?" ok":"")+"' id='wpb-"+idx+"' for='wph-"+idx+"'>"+
-          ((curAud.fotos[idx]||[]).length>0?"✅ "+(curAud.fotos[idx]||[]).length+" foto(s)":"📷 "+(item.fotoObrig?"Tirar foto (obrigatório)":"Tirar foto"))+
-        "</label>"+
-        "<input type='file' id='wph-"+idx+"' accept='image/*' capture='environment' style='display:none' onchange='addPh("+idx+",this)'>"+
-        "<div class='wiz-pprev' id='wpp-"+idx+"'>"+
-          ((curAud.fotos[idx]||[]).map(function(f,fi){return "<div class='pthumb-wrap'><img src='"+f+"' class='pthumb'><button class='pthumb-del' onclick='delPh("+idx+","+fi+")'>×</button></div>";}).join(""))+
-        "</div></div>";
-    });
-    html+="</div>";
+    if(sec.isSigStep){
+      // ── Etapa especial: Assinaturas ──────────────────────────────────
+      var audSigned = !!curAud.sig_aud;
+      var acompExpanded = !!(curAud.acompanhante || curAud.sig_loja || curAud._acompExpand);
+      html+="<div class='wiz-section"+(si===wizStep?" active":"")+"' id='wiz-sec-"+si+"'>";
+      html+="<div class='wiz-sec-hdr'><span class='sec-emoji'>✍️</span><span class='sec-name'>Assinaturas</span>";
+      html+="<span class='sec-counter'>"+(audSigned?"✅ Auditor ok":"Pendente")+"</span></div>";
+      html+="<div class='card' style='padding:14px;margin-bottom:10px'>";
+      html+="<label class='flb' style='margin-bottom:6px'>✍️ Assinatura do Auditor</label>";
+      html+="<p style='font-size:12px;color:var(--g400);margin-bottom:10px'>Assine com o dedo ou mouse — obrigatória</p>";
+      html+="<canvas id='wiz-sigc-aud' height='130' style='border:2px solid "+(audSigned?"var(--gn)":"var(--g200)")+";border-radius:12px;width:100%;display:block;touch-action:none;cursor:crosshair;background:#FAFAFA'></canvas>";
+      html+="<div style='display:flex;gap:8px;margin-top:8px'>";
+      html+="<button class='btn btns btnsm' onclick='clearWizSig(\"aud\")'>🗑️ Limpar</button>";
+      html+=""+(audSigned?"<span style='color:var(--gn);font-size:13px;font-weight:700;align-self:center'>✅ Assinado</span>":"");
+      html+="</div></div>";
+      html+="<div id='wiz-acomp-area'>";
+      if(!acompExpanded){
+        html+="<button class='btn btns btnfull' style='margin-bottom:12px' onclick='expandAcomp()'>+ Adicionar assinatura do acompanhante</button>";
+      } else {
+        html+="<div class='card' style='padding:14px;margin-bottom:10px'>";
+        html+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px'>";
+        html+="<label class='flb' style='margin:0'>👤 Acompanhante</label>";
+        html+="<button class='btn btns btnsm' onclick='collapseAcomp()' style='padding:4px 10px;font-size:11px'>✕ Remover</button></div>";
+        html+="<input type='text' class='finput' id='wiz-acomp' placeholder='Nome de quem acompanhou' value='"+esc(curAud.acompanhante||"")+"' oninput='curAud.acompanhante=this.value' style='margin-bottom:12px'>";
+        html+="<label class='flb' style='margin-bottom:6px'>✍️ Assinatura do Acompanhante</label>";
+        html+="<p style='font-size:12px;color:var(--g400);margin-bottom:10px'>Opcional</p>";
+        html+="<canvas id='wiz-sigc-loja' height='130' style='border:2px solid "+(curAud.sig_loja?"var(--gn)":"var(--g200)")+";border-radius:12px;width:100%;display:block;touch-action:none;cursor:crosshair;background:#FAFAFA'></canvas>";
+        html+="<div style='display:flex;gap:8px;margin-top:8px'>";
+        html+="<button class='btn btns btnsm' onclick='clearWizSig(\"loja\")'>🗑️ Limpar</button>";
+        html+=""+(curAud.sig_loja?"<span style='color:var(--gn);font-size:13px;font-weight:700;align-self:center'>✅ Assinado</span>":"");
+        html+="</div></div>";
+      }
+      html+="</div>"; // fim wiz-acomp-area
+      html+="</div>"; // fim wiz-section sig
+    } else {
+      // ── Etapa normal: itens de checklist ─────────────────────────────
+      var sd=sec.items.filter(function(e){return curAud.respostas[e.idx]!==undefined;}).length;
+      html+="<div class='wiz-section"+(si===wizStep?" active":"")+"' id='wiz-sec-"+si+"'>"+
+        "<div class='wiz-sec-hdr'><span class='sec-emoji'>"+sec.catEmoji+"</span><span class='sec-name'>"+esc(sec.catName)+"</span><span class='sec-counter'>"+sd+" / "+sec.items.length+"</span></div>";
+      sec.items.forEach(function(entry){
+        var item=entry.item,idx=entry.idx,resp=curAud.respostas[idx];
+        html+="<div class='wiz-item"+(resp?" answered-"+resp:"")+"' id='wi-"+idx+"'>"+
+          "<div class='wiz-item-q'>"+(idx+1)+". "+esc(item.pergunta)+"</div>"+
+          "<div class='wiz-item-meta'><span class='wbadge'>Peso "+(item.peso||1)+"</span>"+(item.fotoObrig?"<span class='fotobadge'>📷 Obrigatória</span>":"")+"</div>"+
+          "<div class='wiz-abts'>"+
+            "<button class='wiz-abt cf"+(resp==="cf"?" sel":"")+"' onclick='setAns("+idx+",\"cf\",this)'>✅<br>Conforme</button>"+
+            "<button class='wiz-abt nc"+(resp==="nc"?" sel":"")+"' onclick='setAns("+idx+",\"nc\",this)'>❌<br>Não<br>Conforme</button>"+
+            "<button class='wiz-abt na"+(resp==="na"?" sel":"")+"' onclick='setAns("+idx+",\"na\",this)'>➖<br>N/A</button>"+
+          "</div>"+
+          "<div class='wiz-obs'><input type='text' placeholder='Observação...' value='"+esc(curAud.obs[idx]||"")+"' onchange='setObs("+idx+",this.value)'></div>"+
+          "<label class='wiz-photobtn"+((curAud.fotos[idx]||[]).length>0?" ok":"")+"' id='wpb-"+idx+"' for='wph-"+idx+"'>"+
+            ((curAud.fotos[idx]||[]).length>0?"✅ "+(curAud.fotos[idx]||[]).length+" foto(s)":"📷 "+(item.fotoObrig?"Tirar foto (obrigatório)":"Tirar foto"))+
+          "</label>"+
+          "<input type='file' id='wph-"+idx+"' accept='image/*' capture='environment' style='display:none' onchange='addPh("+idx+",this)'>"+
+          "<div class='wiz-pprev' id='wpp-"+idx+"'>"+
+            ((curAud.fotos[idx]||[]).map(function(f,fi){return "<div class='pthumb-wrap'><img src='"+f+"' class='pthumb'><button class='pthumb-del' onclick='delPh("+idx+","+fi+")'>×</button></div>";}).join(""))+
+          "</div></div>";
+      });
+      html+="</div>";
+    }
   });
 
-  // Rodapé com botões Anterior / Próxima (ou Finalizar)
-  var isFirst=wizStep===0,isLast=wizStep===wizSecs.length-1;
+  // Rodapé de navegação
+  // Na etapa de assinaturas (isSigStep) o botão principal é 'Finalizar'
+  var isFirst=wizStep===0;
+  var curSec=wizSecs[wizStep];
+  var isSigStep=curSec&&curSec.isSigStep;
   html+="<div class='wiz-footer'>"+
     "<button class='btn btns' style='flex:1' "+(isFirst?"onclick='cancelAud()'":"onclick='prevSection()'")+">"+(isFirst?"✕ Cancelar":"◀ Anterior")+"</button>"+
-    (isLast?"<button class='btn btnp' style='flex:2' onclick='finAud()'>🏁 Finalizar</button>":"<button class='btn btnp' style='flex:2' onclick='nextSection()'>Próxima ▶</button>")+
+    (isSigStep
+      ?"<button class='btn btnp' style='flex:2' onclick='finAud()'>🏁 Finalizar Auditoria</button>"
+      :"<button class='btn btnp' style='flex:2' onclick='nextSection()'>Próxima ▶</button>")+
   "</div>";
 
   document.getElementById("exec-wiz").innerHTML=html;
   window.scrollTo(0,0);
+  // Inicializa os canvas de assinatura quando a seção ativa é isSigStep
+  var activeSec=wizSecs[wizStep];
+  if(activeSec&&activeSec.isSigStep){
+    initWizSig();
+  }
+}
+
+/* Inicializa os canvas de assinatura dentro do wizard */
+function initWizSig(){
+  // Aguarda 2 frames para garantir que o layout foi calculado pelo browser
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      _setupCanvases();
+    });
+  });
+}
+
+function _setupCanvases(){
+  ['aud','loja'].forEach(function(tipo){
+    var c=document.getElementById('wiz-sigc-'+tipo);
+    if(!c) return;
+    // Força largura real: offsetWidth é confiável após 2 rAFs
+    var W=c.offsetWidth||c.parentElement&&c.parentElement.offsetWidth||320;
+    var H=parseInt(c.getAttribute('height'))||130;
+    c.width=W; c.height=H;
+    var ctx=c.getContext('2d');
+    ctx.strokeStyle='#1A1A1A'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round';
+    // Restaura assinatura salva se existir
+    if(curAud['sig_'+tipo]){
+      var img=new Image();
+      img.onload=function(){ctx.drawImage(img,0,0,W,H);};
+      img.src=curAud['sig_'+tipo];
+    }
+    var drawing=false;
+    // Coordenadas precisas: escala CSS vs coordenadas internas do canvas
+    function getXY(clientX, clientY){
+      var r=c.getBoundingClientRect();
+      var scaleX=c.width/r.width;
+      var scaleY=c.height/r.height;
+      return {x:(clientX-r.left)*scaleX, y:(clientY-r.top)*scaleY};
+    }
+    // Mouse events
+    c.onmousedown=function(e){
+      drawing=true;
+      var p=getXY(e.clientX,e.clientY);
+      ctx.beginPath(); ctx.moveTo(p.x,p.y);
+      e.preventDefault();
+    };
+    c.onmousemove=function(e){
+      if(!drawing) return;
+      var p=getXY(e.clientX,e.clientY);
+      ctx.lineTo(p.x,p.y); ctx.stroke();
+      saveWizSig(tipo,c);
+      e.preventDefault();
+    };
+    c.onmouseup=function(){drawing=false;};
+    c.onmouseleave=function(){drawing=false;};
+    // Touch events
+    c.ontouchstart=function(e){
+      e.preventDefault(); drawing=true;
+      var t=e.touches[0], p=getXY(t.clientX,t.clientY);
+      ctx.beginPath(); ctx.moveTo(p.x,p.y);
+    };
+    c.ontouchmove=function(e){
+      e.preventDefault(); if(!drawing) return;
+      var t=e.touches[0], p=getXY(t.clientX,t.clientY);
+      ctx.lineTo(p.x,p.y); ctx.stroke();
+      saveWizSig(tipo,c);
+    };
+    c.ontouchend=function(){drawing=false;};
+  });
+}
+
+/* Salva assinatura no estado atual */
+function saveWizSig(tipo,canvas){
+  try{ curAud['sig_'+tipo]=canvas.toDataURL('image/png'); }catch(e){}
+  // Marca o wrapper como assinado
+  var wrap=document.getElementById('wiz-sig-'+tipo+'-wrap');
+  if(wrap) wrap.className='sig-wrap signed';
+}
+
+/* Expande a seção do acompanhante */
+function expandAcomp(){
+  curAud._acompExpand=true;
+  renderWizard(curAud.checklist,curAud.loja);
+  // Reinicializa canvas após render
+  initWizSig();
+}
+
+/* Colapsa e limpa seção do acompanhante */
+function collapseAcomp(){
+  curAud._acompExpand=false;
+  curAud.acompanhante='';
+  curAud.sig_loja=null;
+  renderWizard(curAud.checklist,curAud.loja);
+  initWizSig();
+}
+
+/* Limpa assinatura */
+function clearWizSig(tipo){
+  var c=document.getElementById('wiz-sigc-'+tipo);
+  if(c){ var ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); }
+  curAud['sig_'+tipo]=null;
+  var wrap=document.getElementById('wiz-sig-'+tipo+'-wrap');
+  if(wrap) wrap.className='sig-wrap';
+}
+
+/* Verifica se ambas as assinaturas foram feitas e acompanhante preenchido */
+function validarAssinaturas(){
+  var acomp=document.getElementById('wiz-acomp');
+  var nomeAcomp=acomp?acomp.value.trim():'';
+  // Nome do acompanhante é opcional — não bloqueia
+  // Assinatura do auditor obrigatória
+  if(!curAud.sig_aud){
+    var w=document.getElementById('wiz-sig-aud-wrap');
+    if(w){w.className='sig-wrap error';setTimeout(function(){w.className='sig-wrap';},1000);}
+    showT('✍️ Assinatura do auditor é obrigatória');
+    return false;
+  }
+  // Assinatura do acompanhante é opcional — não bloqueia
+  // Salva o nome do acompanhante no estado
+  curAud.acompanhante=nomeAcomp;
+  return true;
 }
 
 /* Navega para seção por índice (clique na pill) */
 function goToSection(si){wizStep=si;renderWizard(curAud.checklist,curAud.loja);window.scrollTo({top:0,behavior:"smooth"});}
-function nextSection(){if(wizStep<wizSecs.length-1){wizStep++;renderWizard(curAud.checklist,curAud.loja);window.scrollTo({top:0,behavior:"smooth"});}}
+function nextSection(){
+  if(wizStep>=wizSecs.length-1) return;
+  var sec=wizSecs[wizStep];
+  // Seção de assinaturas: sem itens para validar, avança direto
+  if(sec.isSigStep){ wizStep++; renderWizard(curAud.checklist,curAud.loja); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  var secItems=sec.items||[];
+  var semResposta=[];
+  var semFoto=[];
+  secItems.forEach(function(entry){
+    var item=entry.item, idx=entry.idx;
+    var resp=curAud.respostas[idx];
+    var temFoto=curAud.fotos[idx]&&curAud.fotos[idx].length>0;
+    // Item sem nenhuma resposta selecionada
+    if(!resp) semResposta.push(idx);
+    // Item com foto obrigatória respondido mas sem foto
+    if(item.fotoObrig&&resp&&resp!=="na"&&!temFoto) semFoto.push(idx);
+  });
+  // Destaca visualmente os itens com problema
+  function destacar(idxList, cor, bg){
+    idxList.forEach(function(idx){
+      var wi=document.getElementById('wi-'+idx);
+      if(wi){
+        wi.style.border='2px solid '+cor;
+        wi.style.background=bg;
+        wi.scrollIntoView({behavior:'smooth',block:'center'});
+        setTimeout(function(){wi.style.border='';wi.style.background='';},4000);
+      }
+    });
+  }
+  // Primeiro valida respostas pendentes
+  if(semResposta.length){
+    destacar(semResposta,'#EF4444','#FFF5F5');
+    var nums=semResposta.map(function(i){return i+1;}).join(', ');
+    showT('⚠️ Responda o(s) item(s) '+nums+' antes de avançar');
+    return;
+  }
+  // Depois valida fotos obrigatórias
+  if(semFoto.length){
+    destacar(semFoto,'#F59E0B','#FFFBEB');
+    var nums2=semFoto.map(function(i){return i+1;}).join(', ');
+    showT('📷 Tire a foto obrigatória no(s) item(s) '+nums2+' para avançar');
+    return;
+  }
+  // Tudo ok — avança
+  wizStep++;
+  renderWizard(curAud.checklist,curAud.loja);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 function prevSection(){if(wizStep>0){wizStep--;renderWizard(curAud.checklist,curAud.loja);window.scrollTo({top:0,behavior:"smooth"});}}
 
 /* Resposta: atualiza estado e re-renderiza apenas o item e os contadores */
@@ -790,10 +1047,19 @@ function refreshWizProgress(){
   var fill=document.querySelector(".wiz-prog-fill"),lbl=document.querySelector(".wiz-prog-label span:last-child");
   if(fill)fill.style.width=pct.toFixed(0)+"%";if(lbl)lbl.textContent=done+" / "+total;
   wizSecs.forEach(function(sec,si){
-    var sd=sec.items.filter(function(e){return curAud.respostas[e.idx]!==undefined;}).length;
-    var st=sec.items.length,pills=document.querySelectorAll(".wiz-nav-pill");
-    if(pills[si]){var cntEl=pills[si].querySelector("span:last-child");if(cntEl)cntEl.textContent="("+sd+"/"+st+")";pills[si].className="wiz-nav-pill "+(si===wizStep?"active":sd===st&&st>0?"done":sd>0?"partial":"");}
-    var secEl=document.getElementById("wiz-sec-"+si);if(secEl){var ctr=secEl.querySelector(".sec-counter");if(ctr)ctr.textContent=sd+" / "+st;}
+    var pills=document.querySelectorAll(".wiz-nav-pill");
+    if(sec.isSigStep){
+      // Pill de assinaturas: mostra ✓ se ambas assinadas
+      var sigDone=!!curAud.sig_aud; // só auditor é obrigatório
+      if(pills[si]) pills[si].className="wiz-nav-pill "+(si===wizStep?"active":sigDone?"done":"");
+      var secEl=document.getElementById("wiz-sec-"+si);
+      if(secEl){var ctr=secEl.querySelector(".sec-counter");if(ctr)ctr.textContent=sigDone?"✅ Completo":"Pendente";}
+    } else {
+      var sd=sec.items.filter(function(e){return curAud.respostas[e.idx]!==undefined;}).length;
+      var st=sec.items.length;
+      if(pills[si]){var cntEl=pills[si].querySelector("span:last-child");if(cntEl)cntEl.textContent="("+sd+"/"+st+")";pills[si].className="wiz-nav-pill "+(si===wizStep?"active":sd===st&&st>0?"done":sd>0?"partial":"");}
+      var secEl=document.getElementById("wiz-sec-"+si);if(secEl){var ctr=secEl.querySelector(".sec-counter");if(ctr)ctr.textContent=sd+" / "+st;}
+    }
   });
 }
 
@@ -821,15 +1087,40 @@ function cancelAud(){
 
 /* Finaliza e salva auditoria */
 async function finAud(){
+  // Valida assinaturas e nome do acompanhante antes de qualquer coisa
+  if(!validarAssinaturas()) return;
   var items=curAud.checklist.items||[];
-  var fotosPend=[];items.forEach(function(item,idx){if(item.fotoObrig&&curAud.respostas[idx]==="nc"&&!(curAud.fotos[idx]&&curAud.fotos[idx].length))fotosPend.push(idx+1);});
-  if(fotosPend.length){showT("📷 Foto obrigatória nos itens NC: "+fotosPend.join(", "));return;}
+  var fotosPend=[];items.forEach(function(item,idx){
+    // Foto obrigatória se item respondido (qualquer resposta exceto N/A) e sem foto
+    var resp=curAud.respostas[idx];
+    var temFoto=curAud.fotos[idx]&&curAud.fotos[idx].length>0;
+    if(item.fotoObrig&&resp&&resp!=="na"&&!temFoto) fotosPend.push(idx+1);
+  });
+  if(fotosPend.length){
+    // Destaca visualmente os itens sem foto
+    fotosPend.forEach(function(n){
+      var wi=document.getElementById("wi-"+(n-1));
+      if(wi){
+        wi.style.border="2px solid var(--rd)";
+        wi.style.background="#FFF5F5";
+        setTimeout(function(){wi.style.border="";wi.style.background="";},3000);
+      }
+    });
+    showT("📷 Foto obrigatória nos itens: "+fotosPend.join(", ")+" — tire a foto antes de finalizar");
+    return;
+  }
+  // Verifica itens sem resposta e exibe mensagem clara por número do item
   var done=Object.keys(curAud.respostas).length;
-  if(done<items.length&&!confirm("Ainda há "+(items.length-done)+" item(s) sem resposta. Finalizar?"))return;
+  if(done<items.length){
+    var semResp=[];
+    items.forEach(function(item,idx){ if(!curAud.respostas[idx]) semResp.push(idx+1); });
+    var msg="⚠️ "+semResp.length+" item(s) sem resposta: "+semResp.slice(0,5).join(", ")+(semResp.length>5?"...":"")+"\n\nItens sem resposta não contam na pontuação. Finalizar mesmo assim?";
+    if(!confirm(msg)) return;
+  }
   var totalW=0,scoreW=0;
   items.forEach(function(item,idx){var r=curAud.respostas[idx],w=item.peso||1;if(r==="cf"){scoreW+=w;totalW+=w;}else if(r==="nc"){totalW+=w;}});
   var score=totalW?(scoreW/totalW*100):0;curAud.score=score;curAud.data=new Date().toISOString();
-  var aud={id:String(Date.now()),lojaId:curAud.loja.id,checklistId:curAud.checklist.id,auditor:user.nome,data:curAud.data,score:score,respostas:curAud.respostas,obs:curAud.obs,fotos:curAud.fotos,geoLat:curAud.geoLat,geoLng:curAud.geoLng};
+  var aud={id:String(Date.now()),lojaId:curAud.loja.id,checklistId:curAud.checklist.id,auditor:user.nome,data:curAud.data,score:score,respostas:curAud.respostas,obs:curAud.obs,fotos:curAud.fotos,geoLat:curAud.geoLat,geoLng:curAud.geoLng,acompanhante:curAud.acompanhante||'',sigAud:curAud.sig_aud||'',sigLoja:curAud.sig_loja||''};
   db.auditorias.push(aud);cacheDB();await apiPost({action:"saveAuditoria",auditoria:aud});showRes(score);
 }
 
@@ -844,7 +1135,7 @@ function showRes(score){
       "<div style='display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px'><span>🏪</span><strong>"+esc(curAud.loja.nome)+"</strong></div>"+
       "<div style='display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px'><span>📋</span><strong>"+esc(curAud.checklist.nome)+"</strong></div>"+
       "<div style='display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px'><span>👤</span><strong>"+esc(user.nome)+"</strong></div>"+
-      "<div style='display:flex;justify-content:space-between;font-size:14px'><span>📅</span><strong>"+new Date().toLocaleDateString("pt-BR")+"</strong></div></div>"+
+      "<div style='display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px'><span>📅</span><strong>"+new Date().toLocaleDateString("pt-BR")+"</strong></div>"+"<div style='display:flex;justify-content:space-between;font-size:14px'><span>👤 Acompanhou</span><strong>"+(curAud.acompanhante||"—")+"</strong></div></div>"+
     "<div style='display:flex;gap:8px;text-align:center'>"+
       "<div style='flex:1;background:#F0FDF4;border-radius:10px;padding:12px'><div style='font-size:22px;font-weight:900;color:var(--gn)'>"+cf+"</div><div style='font-size:11px;color:#15803D'>✅ Conforme</div></div>"+
       "<div style='flex:1;background:#FEF2F2;border-radius:10px;padding:12px'><div style='font-size:22px;font-weight:900;color:var(--rd)'>"+nc+"</div><div style='font-size:11px;color:#DC2626'>❌ Não Conf.</div></div>"+
@@ -859,25 +1150,39 @@ async function envWpp(){
   var loja=curAud.loja,cl=curAud.checklist,score=curAud.score;
   var st=score>=80?"✅ APROVADO":score>=60?"⚠️ ATENÇÃO":"❌ CRÍTICO";
   var ncItems=(cl.items||[]).filter(function(_,idx){return curAud.respostas[idx]==="nc";});
-  var msg="🏪 *RELATÓRIO DE AUDITORIA - LanLan*\n\n📍 *Loja:* "+loja.nome+"\n📋 *Checklist:* "+cl.nome+"\n👤 *Auditor:* "+user.nome+"\n📅 *Data:* "+new Date().toLocaleDateString("pt-BR")+"\n\n━━━━━━━━━━━━━━━━━━━━━\n🎯 *RESULTADO: "+score.toFixed(0)+"% — "+st+"*\n━━━━━━━━━━━━━━━━━━━━━\n\n";
+  var msg="🏪 *RELATÓRIO DE AUDITORIA - LanLan*\n\n📍 *Loja:* "+loja.nome+"\n📋 *Checklist:* "+cl.nome+"\n👤 *Auditor:* "+user.nome+"\n👥 *Acompanhou:* "+(curAud.acompanhante||"—")+"\n📅 *Data:* "+new Date().toLocaleDateString("pt-BR")+"\n\n━━━━━━━━━━━━━━━━━━━━━\n🎯 *RESULTADO: "+score.toFixed(0)+"% — "+st+"*\n━━━━━━━━━━━━━━━━━━━━━\n\n";
   if(ncItems.length){msg+="❌ *Itens Não Conformes:*\n";ncItems.forEach(function(item,i){var idx=(cl.items||[]).indexOf(item);msg+=(i+1)+". "+item.pergunta+(curAud.obs[idx]?"\n   📝 "+curAud.obs[idx]:"")+  "\n";});msg+="\n";}
   msg+="_Relatório gerado pelo Sistema LanLan Auditoria_";
-  await gerarPDF(loja,cl,score,curAud.respostas,curAud.obs,curAud.fotos,user.nome,curAud.data);
+  await gerarPDF(loja,cl,score,curAud.respostas,curAud.obs,curAud.fotos,user.nome,curAud.data,curAud.acompanhante||'',curAud.sig_aud||null,curAud.sig_loja||null);
   var phone=(loja.whatsapp||"").replace(/\D/g,"");
   if(phone)window.open("https://api.whatsapp.com/send?phone=55"+phone+"&text="+encodeURIComponent(msg),"_blank");
   else showT("⚠️ WhatsApp não cadastrado. PDF baixado!");
   closeM("m-res");cancelAud();updDash();
 }
-async function gerarPDFFromAuditoria(audId){var a=db.auditorias.find(function(x){return x.id==audId;});if(!a)return;var loja=db.lojas.find(function(l){return l.id==a.lojaId;})||{nome:a.lojaId};var cl=db.checklists.find(function(c){return c.id==a.checklistId;})||{nome:a.checklistId,items:[]};await gerarPDF(loja,cl,a.score,a.respostas||{},a.obs||{},a.fotos||{},a.auditor,a.data);}
-async function gerarPDF(loja,cl,score,respostas,obs,fotos,auditorNome,data){
+async function gerarPDFFromAuditoria(audId){var a=db.auditorias.find(function(x){return x.id==audId;});if(!a)return;var loja=db.lojas.find(function(l){return l.id==a.lojaId;})||{nome:a.lojaId};var cl=db.checklists.find(function(c){return c.id==a.checklistId;})||{nome:a.checklistId,items:[]};await gerarPDF(loja,cl,a.score,a.respostas||{},a.obs||{},a.fotos||{},a.auditor,a.data,a.acompanhante||"",a.sigAud||null,a.sigLoja||null);}
+async function gerarPDF(loja,cl,score,respostas,obs,fotos,auditorNome,data,acompNome,sigAudData,sigLojaData){
   var jspdf=window.jspdf;if(!jspdf){showT("PDF indisponível");return;}
   var doc=new jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
   var stc=score>=80?[34,197,94]:score>=60?[234,179,8]:[239,68,68],stl=score>=80?"APROVADO":score>=60?"ATENCAO":"CRITICO",y=0;
   doc.setFillColor(232,82,10);doc.rect(0,0,210,45,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(22);doc.text("LANLAN AUDITORIA",105,18,{align:"center"});doc.setFontSize(11);doc.setFont("helvetica","normal");doc.text("Relatorio de Auditoria de Qualidade",105,26,{align:"center"});doc.setFillColor(stc[0],stc[1],stc[2]);doc.roundedRect(70,31,70,12,3,3,"F");doc.setFont("helvetica","bold");doc.setFontSize(13);doc.text((score||0).toFixed(0)+"% - "+stl,105,39,{align:"center"});y=55;
-  doc.setFillColor(255,248,243);doc.roundedRect(10,y,190,36,3,3,"F");doc.setDrawColor(232,82,10);doc.roundedRect(10,y,190,36,3,3,"S");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text("Loja: "+loja.nome,15,y+8);doc.text("Checklist: "+(cl.nome||""),15,y+16);doc.text("Auditor: "+(auditorNome||""),15,y+24);doc.text("Data: "+new Date(data||Date.now()).toLocaleDateString("pt-BR"),110,y+8);if(loja.endereco)doc.text((loja.endereco||"").substring(0,35),110,y+16);y+=44;
+  doc.setFillColor(255,248,243);doc.roundedRect(10,y,190,36,3,3,"F");doc.setDrawColor(232,82,10);doc.roundedRect(10,y,190,36,3,3,"S");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text("Loja: "+loja.nome,15,y+8);doc.text("Checklist: "+(cl.nome||""),15,y+16);doc.text("Auditor: "+(auditorNome||""),15,y+24);
+  if(acompNome) doc.text("Acompanhou: "+acompNome.substring(0,35),15,y+32);doc.text("Data: "+new Date(data||Date.now()).toLocaleDateString("pt-BR"),110,y+8);if(loja.endereco)doc.text((loja.endereco||"").substring(0,35),110,y+16);y+=44;
   var cats={};(cl.items||[]).forEach(function(item,idx){var cat=db.categorias.find(function(c){return c.id==item.categoriaId;});var cn=cat?((cat.emoji||"")+" "+cat.nome):"Geral";if(!cats[cn])cats[cn]=[];cats[cn].push({item:item,idx:idx});});
   Object.keys(cats).forEach(function(cn){if(y>250){doc.addPage();y=15;}doc.setFillColor(232,82,10);doc.roundedRect(10,y,190,8,2,2,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(cn.replace(/[\u{1F000}-\u{1FFFF}]/gu,"").trim()||cn,14,y+5.5);y+=12;cats[cn].forEach(function(entry){if(y>260){doc.addPage();y=15;}var item=entry.item,idx=entry.idx,r=respostas[idx],ob=obs[idx]||"";var bc=r==="cf"?[240,253,244]:r==="nc"?[254,242,242]:[245,237,228],dc=r==="cf"?[34,197,94]:r==="nc"?[239,68,68]:[186,156,136],h=ob?14:10;doc.setFillColor(bc[0],bc[1],bc[2]);doc.roundedRect(10,y,190,h,2,2,"F");doc.setFillColor(dc[0],dc[1],dc[2]);doc.circle(17,y+5,2.5,"F");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(9);var pq=item.pergunta.length>62?item.pergunta.substring(0,59)+"...":item.pergunta;doc.text(pq,22,y+5.5);var rl=r==="cf"?"CONFORME":r==="nc"?"NAO CONFORME":r==="na"?"N/A":"—";doc.setFont("helvetica","bold");doc.setTextColor(dc[0],dc[1],dc[2]);doc.text(rl,198,y+5.5,{align:"right"});if(ob){doc.setTextColor(122,92,74);doc.setFont("helvetica","italic");doc.setFontSize(8);doc.text("Obs: "+ob.substring(0,70),22,y+11);}y+=h+2;if(fotos[idx]&&fotos[idx].length){fotos[idx].forEach(function(fd){if(y>215){doc.addPage();y=15;}try{doc.addImage(fd,"JPEG",14,y,55,44);}catch(e){}y+=48;});}});y+=4;});
-  if(y>240){doc.addPage();y=15;}doc.setFillColor(232,82,10);doc.rect(0,285,210,12,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text("LanLan - Sistema de Auditoria de Qualidade",105,292,{align:"center"});
+  if(y>220){doc.addPage();y=15;}
+  doc.setFillColor(250,248,245);doc.roundedRect(10,y,190,42,3,3,"F");
+  doc.setDrawColor(200,180,170);doc.roundedRect(10,y,190,42,3,3,"S");
+  doc.setTextColor(122,92,74);doc.setFont("helvetica","bold");doc.setFontSize(9);
+  doc.text("Assinatura do Auditor",14,y+6);
+  doc.text("Assinatura do Responsável",105,y+6);
+  if(sigAudData){try{doc.addImage(sigAudData,"PNG",14,y+8,85,26);}catch(e){}}
+  if(sigLojaData){try{doc.addImage(sigLojaData,"PNG",105,y+8,90,26);}catch(e){}}
+  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(100,80,60);
+  doc.text((auditorNome||""),14,y+38);
+  doc.text((acompNome||"—"),105,y+38);
+  y+=46;
+  if(y>240){doc.addPage();y=15;}doc.setFillColor(232,82,10);doc.rect(0,285,210,12,"F");
+doc.setTextColor(255,255,255);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text("LanLan - Sistema de Auditoria de Qualidade",105,292,{align:"center"});
   doc.save("auditoria_"+(loja.nome||"").replace(/\s/g,"_")+"_"+new Date().toISOString().slice(0,10)+".pdf");
 }
 </script>
