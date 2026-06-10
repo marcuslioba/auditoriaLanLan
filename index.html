@@ -499,7 +499,7 @@ function loginOk(){
   document.getElementById("lerr").style.display="none";document.getElementById("lbtxt").textContent="Entrar →";
   document.getElementById("pinin").value="";for(var i=0;i<6;i++){var d=document.getElementById("pd"+i);if(d)d.className="pin-dot";}
   var cargo=(user.cargo||"").toLowerCase();
-  if (cargo !== "admin") {
+  if(cargo==="auditor"){
     document.getElementById("bnav").style.display="none";document.getElementById("pg-auditor").style.display="block";
     document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
     document.getElementById("aud-greet").textContent=user.nome.split(" ")[0];renderAudHist();
@@ -525,8 +525,8 @@ function showLerr(msg){var el=document.getElementById("lerr");el.textContent=msg
 // NAVEGAÇÃO
 // ============================================================
 function showP(name,btn){
-var cargo = (user && user.cargo || "").toLowerCase();
-if (cargo !== "admin" && name !== "exec") return; // Bloqueia navegação de não-admins
+  var cargo=(user&&user.cargo||"").toLowerCase();
+  if(cargo==="auditor"&&name!=="exec")return;
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
   document.querySelectorAll(".nitem").forEach(function(n){n.classList.remove("active");});
   var pg=document.getElementById("pg-"+name);if(pg)pg.classList.add("active");if(btn)btn.classList.add("active");
