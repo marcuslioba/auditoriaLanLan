@@ -611,7 +611,6 @@ async function doLogin(){
   if(pin.length<4){showLerr("Digite seu PIN");return;}
   document.getElementById("lbtxt").innerHTML='<span class="spin"></span>';
   await loadAll();
-  if(pin==="000000"){user={id:"admin",nome:"Administrador",cargo:"admin",pin:"000000"};loginOk();return;}
   var a=db.auditores.find(function(x){return String(x.pin)===String(pin)||String(x.telefone)===String(pin);});
   if(a){user=a;loginOk();}else{document.getElementById("lbtxt").textContent="Entrar →";showLerr("PIN incorreto.");}
 }
