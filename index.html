@@ -255,6 +255,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 <div id="hdr" style="display:none">
   <div class="hlogo"><img id="hdr-logo" alt=""><span>LanLan</span></div>
   <div style="display:flex;align-items:center;gap:8px">
+    <button class="btnout" id="btn-voltar-inicio" style="display:none;background:rgba(255,255,255,.15);font-size:12px;width:auto;padding:6px 10px" onclick="voltarInicio()">← Início</button>
     <span class="huname" id="hdruser"></span><span class="hbadge" id="hdrbadge"></span>
     <button class="btnout" onclick="doLogout()">↩</button>
   </div>
@@ -282,6 +283,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
     <div class="fg"><label class="flb">📅 De</label><input type="date" class="finput" id="f-de"></div>
     <div class="fg"><label class="flb">Até</label><input type="date" class="finput" id="f-ate"></div>
     <div class="fg"><label class="flb">🏪 Loja</label><select class="fselect" id="f-loja"><option value="">Todas</option></select></div>
+    <div class="fg"><label class="flb">📋 Checklist</label><select class="fselect" id="f-checklist"><option value="">Todos</option></select></div>
     <div class="fg"><label class="flb">👤 Auditor</label><select class="fselect" id="f-auditor"><option value="">Todos</option></select></div>
     <button class="btn btnp btnsm" onclick="applyFilters()">🔍</button>
     <button class="btn btns btnsm" onclick="clearFilters()">✕</button>
@@ -430,13 +432,14 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 
 <div class="moverlay" id="m-res"><div class="modal"><div class="mhandle"></div>
   <div class="mtitle">✅ Auditoria Concluída</div><div id="res-content"></div>
-  <div class="brow" style="margin-top:20px"><button class="btn btns" onclick="closeM('m-res')">Fechar</button><button class="btn btnp" style="flex:1" onclick="envWpp()">📤 WhatsApp + PDF</button></div>
+  <div class="brow" style="margin-top:20px"><button class="btn btns" onclick="closeM('m-res')">Fechar</button><button class="btn btnp" style="flex:1" onclick="envWpp()">💬 Enviar WhatsApp</button></div>
 </div></div>
 
 <div class="moverlay fullpage" id="m-view"><div class="modal" style="border-radius:0;max-height:100vh;padding-top:16px">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
     <button class="btn btns btnsm" onclick="closeM('m-view')">← Voltar</button>
-    <div style="font-family:'Nunito',sans-serif;font-size:16px;font-weight:900">Relatório</div></div>
+    <div style="font-family:'Nunito',sans-serif;font-size:16px;font-weight:900">Relatório</div>
+    <button class="btn btnp btnsm" id="btn-pdf-topo" onclick="abrirAvisoPDF(window._viewAudId)">📄 PDF</button></div>
   <div id="view-content"></div>
 </div></div>
 
@@ -628,7 +631,7 @@ function loginOk(){
     document.getElementById("pg-auditor").style.display="none";document.getElementById("bnav").style.display="flex";
     document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
     document.getElementById("pg-dash").classList.add("active");document.querySelector(".nitem").classList.add("active");
-    renderAll();updDash();popFilterAuditores();popFilterLojas();
+    renderAll();updDash();popFilterAuditores();popFilterLojas();popFilterChecklists();
   }
 }
 function doLogout(){
@@ -651,9 +654,25 @@ function showP(name,btn){
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
   document.querySelectorAll(".nitem").forEach(function(n){n.classList.remove("active");});
   var pg=document.getElementById("pg-"+name);if(pg)pg.classList.add("active");if(btn)btn.classList.add("active");
-  if(name==="exec")popExec();if(name==="dash"){updDash();popFilterAuditores();popFilterLojas();}
+  if(name==="exec")popExec();if(name==="dash"){updDash();popFilterAuditores();popFilterLojas();popFilterChecklists();}
 }
+function voltarInicio(){
+  // Volta para tela do auditor e esconde botão voltar
+  document.getElementById("pg-exec").classList.remove("active");
+  document.getElementById("pg-auditor").style.display="block";
+  document.getElementById("btn-voltar-inicio").style.display="none";
+  // Reseta estado da auditoria
+  curAud={}; wizStep=0; wizSecs=[];
+  geoStatus="idle"; geoOk=false; geoData=null;
+  var setup=document.getElementById("exec-setup");
+  var wiz=document.getElementById("exec-wiz");
+  if(setup)setup.style.display="block";
+  if(wiz){wiz.style.display="none";wiz.innerHTML="";}
+}
+
 function irParaExec(){
+  // Mostra botão voltar no header
+  var bv=document.getElementById("btn-voltar-inicio");if(bv)bv.style.display="flex";
   // Reseta estado da auditoria anterior
   curAud={}; wizStep=0; wizSecs=[];
   geoStatus="idle"; geoOk=false; geoData=null;
@@ -694,6 +713,15 @@ function renderAudHist(){var el=document.getElementById("aud-hist-list");var min
 // ============================================================
 // DASHBOARD
 // ============================================================
+function popFilterChecklists(){
+  var sel=document.getElementById("f-checklist"); if(!sel) return;
+  var cur=sel.value;
+  sel.innerHTML="<option value=''>Todos</option>"+
+    db.checklists.map(function(c){
+      return "<option value='"+c.id+"'"+(c.id==cur?" selected":"")+">"+esc(c.nome)+"</option>";
+    }).join("");
+}
+
 function popFilterLojas(){
   var sel=document.getElementById("f-loja"); if(!sel) return;
   var cur=sel.value;
@@ -704,9 +732,9 @@ function popFilterLojas(){
 }
 
 function popFilterAuditores(){var sel=document.getElementById("f-auditor");if(!sel)return;var cur=sel.value;sel.innerHTML="<option value=''>Todos</option>"+db.auditores.map(function(a){return "<option value='"+esc(a.nome)+"'"+(a.nome==cur?" selected":"")+">"+esc(a.nome)+"</option>";}).join("");}
-function applyFilters(){currentFilters={de:document.getElementById("f-de").value,ate:document.getElementById("f-ate").value,auditor:document.getElementById("f-auditor").value,loja:document.getElementById("f-loja")?document.getElementById("f-loja").value:""};updDash(true);}
-function clearFilters(){document.getElementById("f-de").value="";document.getElementById("f-ate").value="";document.getElementById("f-auditor").value="";var fl=document.getElementById("f-loja");if(fl)fl.value="";currentFilters={};updDash(false);}
-function filterAuditorias(list){return list.filter(function(a){var ok=true;if(currentFilters.de)ok=ok&&new Date(a.data)>=new Date(currentFilters.de);if(currentFilters.ate)ok=ok&&new Date(a.data)<=new Date(currentFilters.ate+"T23:59:59");if(currentFilters.auditor)ok=ok&&a.auditor===currentFilters.auditor;if(currentFilters.loja)ok=ok&&String(a.lojaId)===String(currentFilters.loja);return ok;});}
+function applyFilters(){currentFilters={de:document.getElementById("f-de").value,ate:document.getElementById("f-ate").value,auditor:document.getElementById("f-auditor").value,loja:document.getElementById("f-loja")?document.getElementById("f-loja").value:"",checklist:document.getElementById("f-checklist")?document.getElementById("f-checklist").value:""};updDash(true);}
+function clearFilters(){document.getElementById("f-de").value="";document.getElementById("f-ate").value="";document.getElementById("f-auditor").value="";var fl=document.getElementById("f-loja");if(fl)fl.value="";var fc=document.getElementById("f-checklist");if(fc)fc.value="";currentFilters={};updDash(false);}
+function filterAuditorias(list){return list.filter(function(a){var ok=true;if(currentFilters.de)ok=ok&&new Date(a.data)>=new Date(currentFilters.de);if(currentFilters.ate)ok=ok&&new Date(a.data)<=new Date(currentFilters.ate+"T23:59:59");if(currentFilters.auditor)ok=ok&&a.auditor===currentFilters.auditor;if(currentFilters.loja)ok=ok&&String(a.lojaId)===String(currentFilters.loja);if(currentFilters.checklist)ok=ok&&String(a.checklistId)===String(currentFilters.checklist);return ok;});}
 function updDash(filtered){
   document.getElementById("st-lojas").textContent=db.lojas.length;document.getElementById("st-aud").textContent=db.auditores.length;document.getElementById("st-cl").textContent=db.checklists.length;document.getElementById("st-exec").textContent=db.auditorias.length;
   var list=filtered?filterAuditorias(db.auditorias):db.auditorias;
@@ -734,7 +762,8 @@ function viewAuditoria(audId){
   var html="<div style='text-align:center;margin-bottom:20px'><div class='scircle' style='border-color:"+col+"'><div class='snum2' style='color:"+col+"'>"+sc.toFixed(0)+"%</div><div class='slb2'>Pontuação</div></div><span class='badge "+cls+"' style='font-size:14px;padding:6px 16px'>"+sts+"</span></div><div class='card' style='margin-bottom:16px'><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px'><span style='color:var(--g400)'>🏪 Loja</span><strong>"+esc(loja.nome)+"</strong></div><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px'><span style='color:var(--g400)'>📋 Checklist</span><strong>"+esc(cl.nome)+"</strong></div><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px'><span style='color:var(--g400)'>👤 Auditor</span><strong>"+esc(a.auditor||"—")+"</strong></div><div style='display:flex;justify-content:space-between;font-size:13px'><span style='color:var(--g400)'>📅 Data</span><strong>"+(a.data?new Date(a.data).toLocaleString("pt-BR"):"—")+"</strong></div></div>";
   var cats={};(cl.items||[]).forEach(function(item,idx){var cat=db.categorias.find(function(c){return c.id==item.categoriaId;});var cn=cat?((cat.emoji||"")+" "+cat.nome):"📌 Geral";if(!cats[cn])cats[cn]=[];cats[cn].push({item:item,idx:idx});});
   Object.keys(cats).forEach(function(cn){html+="<div class='rel-section'><div class='rel-cat-hdr'>"+cn+"</div>";cats[cn].forEach(function(e){var r=respostas[e.idx]||"—";var rClass=r==="cf"?"cf":r==="nc"?"nc":"na";var rLabel=r==="cf"?"✅ Conforme":r==="nc"?"❌ Não Conforme":r==="na"?"➖ N/A":"— Sem resposta";var ob=obs[e.idx]||"";var ff=Array.isArray(fotos[e.idx])?fotos[e.idx]:[];html+="<div class='rel-item "+rClass+"'><div class='rel-q'>"+(e.idx+1)+". "+esc(e.item.pergunta)+"</div><div class='rel-ans "+rClass+"'>"+rLabel+"</div>"+(ob?"<div class='rel-obs'>📝 "+esc(ob)+"</div>":"")+(ff.length?"<div class='rel-fotos'>"+ff.map(function(f){return "<img src='"+f+"' class='rel-foto'>";}).join("")+"</div>":"")+  "</div>";});html+="</div>";});
-  html+="<button class='btn btnp btnfull' style='margin-top:8px' onclick='abrirAvisoPDF(\""+audId+"\")'>📄 Baixar PDF</button>";
+  
+  window._viewAudId = audId;
   document.getElementById("view-content").innerHTML=html;openM("m-view");
 }
 
@@ -797,7 +826,7 @@ function renderCargosCheckboxes(selectedIds){
 }
 function abrirNovoCargo(){document.getElementById("mt-cargo").textContent="Novo Cargo";document.getElementById("cargo-eid").value="";document.getElementById("cargo-nome").value="";document.getElementById("cargo-desc").value="";openM("m-cargo");}
 function editCargo(i){var c=db.cargos[i];document.getElementById("mt-cargo").textContent="Editar Cargo";document.getElementById("cargo-eid").value=c.id||"";document.getElementById("cargo-nome").value=c.nome||"";document.getElementById("cargo-desc").value=c.descricao||"";openM("m-cargo");}
-async function saveCargo(){var nome=document.getElementById("cargo-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var c={id:document.getElementById("cargo-eid").value||String(Date.now()),nome:nome,descricao:document.getElementById("cargo-desc").value};var idx=db.cargos.findIndex(function(x){return x.id==c.id;});if(idx>=0)db.cargos[idx]=c;else db.cargos.push(c);cacheDB();btnLoading("#m-cargo .btnp",true);await apiPost({action:"saveCargo",cargo:c});btnLoading("#m-cargo .btnp",false,"Salvar");closeM("m-cargo");rCargos();showT("✅ Cargo salvo!");}
+async function saveCargo(){var nome=document.getElementById("cargo-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var c={id:document.getElementById("cargo-eid").value||String(Date.now()),nome:nome,descricao:document.getElementById("cargo-desc").value};var idx=db.cargos.findIndex(function(x){return x.id==c.id;});if(idx>=0)db.cargos[idx]=c;else db.cargos.push(c);cacheDB();showCrudLoading("Salvando cargo...");await apiPost({action:"saveCargo",cargo:c});hideCrudLoading();closeM("m-cargo");rCargos();showT("✅ Cargo salvo!");}
 async function delCargo(i){if(!confirm("Excluir este cargo?"))return;var c=db.cargos[i];db.cargos.splice(i,1);cacheDB();await apiPost({action:"deleteCargo",id:c.id});rCargos();showT("🗑️ Cargo excluído");}
 
 // ============================================================
@@ -842,7 +871,18 @@ function renderAuditoresNaLoja(lojaId){
 
 function captureLojaGeo(){if(!navigator.geolocation){showT("Geolocalização não suportada");return;}showT("📍 Capturando...");navigator.geolocation.getCurrentPosition(function(pos){document.getElementById("loja-lat").value=pos.coords.latitude.toFixed(7);document.getElementById("loja-lng").value=pos.coords.longitude.toFixed(7);showT("✅ Localização capturada!");},function(){showT("❌ Não foi possível obter localização");});}
 function editLoja(i){var l=db.lojas[i];document.getElementById("mt-loja").textContent="Editar Loja";document.getElementById("loja-eid").value=l.id||"";document.getElementById("loja-nome").value=l.nome||"";document.getElementById("loja-end").value=l.endereco||"";document.getElementById("loja-lat").value=l.lat||"";document.getElementById("loja-lng").value=l.lng||"";document.getElementById("loja-wpp").value=l.whatsapp||"";document.getElementById("loja-resp").value=l.responsavel||"";renderAuditoresNaLoja(l.id);openM("m-loja");}
-async function saveLoja(){var nome=document.getElementById("loja-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var l={id:document.getElementById("loja-eid").value||String(Date.now()),nome:nome,endereco:document.getElementById("loja-end").value,lat:parseFloat(document.getElementById("loja-lat").value)||null,lng:parseFloat(document.getElementById("loja-lng").value)||null,whatsapp:document.getElementById("loja-wpp").value,responsavel:document.getElementById("loja-resp").value};var idx=db.lojas.findIndex(function(x){return x.id==l.id;});if(idx>=0)db.lojas[idx]=l;else db.lojas.push(l);cacheDB();btnLoading("#m-loja .btnp",true);await apiPost({action:"saveLoja",loja:l});btnLoading("#m-loja .btnp",false,"Salvar");closeM("m-loja");rLojas();updDash();["loja-eid","loja-nome","loja-end","loja-lat","loja-lng","loja-wpp","loja-resp"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("mt-loja").textContent="Nova Loja";showT("✅ Loja salva!");}
+async function saveLoja(){
+  var nome=document.getElementById("loja-nome").value.trim();
+  if(!nome){showT("Nome é obrigatório");return;}
+  var lat=parseFloat(document.getElementById("loja-lat").value);
+  var lng=parseFloat(document.getElementById("loja-lng").value);
+  if(!lat||!lng){
+    showT("📍 Latitude e Longitude são obrigatórias");
+    document.getElementById("loja-lat").style.border="2px solid var(--rd)";
+    document.getElementById("loja-lng").style.border="2px solid var(--rd)";
+    setTimeout(function(){document.getElementById("loja-lat").style.border="";document.getElementById("loja-lng").style.border="";},3000);
+    return;
+  }var l={id:document.getElementById("loja-eid").value||String(Date.now()),nome:nome,endereco:document.getElementById("loja-end").value,lat:parseFloat(document.getElementById("loja-lat").value)||null,lng:parseFloat(document.getElementById("loja-lng").value)||null,whatsapp:document.getElementById("loja-wpp").value,responsavel:document.getElementById("loja-resp").value};var idx=db.lojas.findIndex(function(x){return x.id==l.id;});if(idx>=0)db.lojas[idx]=l;else db.lojas.push(l);cacheDB();showCrudLoading("Salvando loja...");await apiPost({action:"saveLoja",loja:l});hideCrudLoading();closeM("m-loja");rLojas();updDash();["loja-eid","loja-nome","loja-end","loja-lat","loja-lng","loja-wpp","loja-resp"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("mt-loja").textContent="Nova Loja";showT("✅ Loja salva!");}
 async function delLoja(i){if(!confirm("Excluir esta loja?"))return;var l=db.lojas[i];db.lojas.splice(i,1);cacheDB();await apiPost({action:"deleteLoja",id:l.id});rLojas();updDash();showT("🗑️ Loja excluída");}
 
 // ============================================================
@@ -906,14 +946,14 @@ async function saveAud(){var nome=document.getElementById("aud-nome").value.trim
   if(!acessoTotal){
     lojasPermitidas=Array.from(document.querySelectorAll("#aud-lojas-checks input:checked")).map(function(el){return el.value;});
   }
-  var a={id:document.getElementById("aud-eid").value||String(Date.now()),nome:nome,pin:pin,cargo:document.getElementById("aud-cargo").value,acessoTotal:acessoTotal,lojasPermitidas:lojasPermitidas};var idx=db.auditores.findIndex(function(x){return x.id==a.id;});if(idx>=0)db.auditores[idx]=a;else db.auditores.push(a);cacheDB();btnLoading("#m-aud .btnp",true);await apiPost({action:"saveAuditor",auditor:a});btnLoading("#m-aud .btnp",false,"Salvar");closeM("m-aud");rAuds();updDash();showT("✅ Auditor salvo! PIN: "+pin);}
+  var a={id:document.getElementById("aud-eid").value||String(Date.now()),nome:nome,pin:pin,cargo:document.getElementById("aud-cargo").value,acessoTotal:acessoTotal,lojasPermitidas:lojasPermitidas};var idx=db.auditores.findIndex(function(x){return x.id==a.id;});if(idx>=0)db.auditores[idx]=a;else db.auditores.push(a);cacheDB();showCrudLoading("Salvando auditor...");await apiPost({action:"saveAuditor",auditor:a});hideCrudLoading();closeM("m-aud");rAuds();updDash();showT("✅ Auditor salvo! PIN: "+pin);}
 async function delAud(i){if(!confirm("Excluir este auditor?"))return;var a=db.auditores[i];db.auditores.splice(i,1);cacheDB();await apiPost({action:"deleteAuditor",id:a.id});rAuds();updDash();showT("🗑️ Auditor excluído");}
 
 // ============================================================
 // CATEGORIAS — CRUD
 // ============================================================
 function editCat(i){var c=db.categorias[i];document.getElementById("mt-cat").textContent="Editar Categoria";document.getElementById("cat-eid").value=c.id||"";document.getElementById("cat-nome").value=c.nome||"";document.getElementById("cat-emoji").value=c.emoji||"";document.getElementById("emoji-display").textContent=c.emoji||"📂";document.getElementById("cat-peso").value=c.peso||"";openM("m-cat");}
-async function saveCat(){var nome=document.getElementById("cat-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var c={id:document.getElementById("cat-eid").value||String(Date.now()),nome:nome,emoji:document.getElementById("cat-emoji").value||"📂",peso:parseInt(document.getElementById("cat-peso").value)||10};var idx=db.categorias.findIndex(function(x){return x.id==c.id;});if(idx>=0)db.categorias[idx]=c;else db.categorias.push(c);cacheDB();btnLoading("#m-cat .btnp",true);await apiPost({action:"saveCategoria",categoria:c});btnLoading("#m-cat .btnp",false,"Salvar");closeM("m-cat");rCats();["cat-eid","cat-nome","cat-emoji","cat-peso"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("emoji-display").textContent="📂";document.getElementById("mt-cat").textContent="Nova Categoria";showT("✅ Categoria salva!");}
+async function saveCat(){var nome=document.getElementById("cat-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var c={id:document.getElementById("cat-eid").value||String(Date.now()),nome:nome,emoji:document.getElementById("cat-emoji").value||"📂",peso:parseInt(document.getElementById("cat-peso").value)||10};var idx=db.categorias.findIndex(function(x){return x.id==c.id;});if(idx>=0)db.categorias[idx]=c;else db.categorias.push(c);cacheDB();showCrudLoading("Salvando categoria...");await apiPost({action:"saveCategoria",categoria:c});hideCrudLoading();closeM("m-cat");rCats();["cat-eid","cat-nome","cat-emoji","cat-peso"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("emoji-display").textContent="📂";document.getElementById("mt-cat").textContent="Nova Categoria";showT("✅ Categoria salva!");}
 async function delCat(i){if(!confirm("Excluir esta categoria?"))return;var c=db.categorias[i];db.categorias.splice(i,1);cacheDB();await apiPost({action:"deleteCategoria",id:c.id});rCats();showT("🗑️ Categoria excluída");}
 
 // ============================================================
@@ -924,20 +964,45 @@ function addItem(item){item=item||{};var div=document.createElement("div");div.s
 function getItems(){return Array.from(document.querySelectorAll("#items-ed > div")).map(function(c){return {pergunta:c.querySelector("[data-f='p']").value.trim(),categoriaId:c.querySelector("[data-f='c']").value,peso:parseInt(c.querySelector("[data-f='w']").value)||1,fotoObrig:c.querySelector("[data-f='fotoObrig']").checked};}).filter(function(i){return i.pergunta;});}
 function abrirNovoCL(){document.getElementById("mt-cl").textContent="Novo Checklist";document.getElementById("cl-eid").value="";document.getElementById("cl-nome").value="";document.getElementById("cl-desc").value="";document.getElementById("items-ed").innerHTML="";renderCargosCheckboxes([]);openM("m-cl");}
 function editCL(i){var c=db.checklists[i];document.getElementById("mt-cl").textContent="Editar Checklist";document.getElementById("cl-eid").value=c.id||"";document.getElementById("cl-nome").value=c.nome||"";document.getElementById("cl-desc").value=c.descricao||"";document.getElementById("items-ed").innerHTML="";(c.items||[]).forEach(function(it){addItem(it);});renderCargosCheckboxes(c.cargosPermitidos||[]);openM("m-cl");}
-async function saveCL(){var nome=document.getElementById("cl-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var cargos=Array.from(document.querySelectorAll("#cl-cargos-list input:checked")).map(function(el){return el.value;});var cl={id:document.getElementById("cl-eid").value||String(Date.now()),nome:nome,descricao:document.getElementById("cl-desc").value,cargosPermitidos:cargos,items:getItems()};var idx=db.checklists.findIndex(function(x){return x.id==cl.id;});if(idx>=0)db.checklists[idx]=cl;else db.checklists.push(cl);cacheDB();btnLoading("#m-cl .btnp",true);await apiPost({action:"saveChecklist",checklist:cl});btnLoading("#m-cl .btnp",false,"Salvar");closeM("m-cl");rCLs();updDash();showT("✅ Checklist salvo!");}
+async function saveCL(){var nome=document.getElementById("cl-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var cargos=Array.from(document.querySelectorAll("#cl-cargos-list input:checked")).map(function(el){return el.value;});var cl={id:document.getElementById("cl-eid").value||String(Date.now()),nome:nome,descricao:document.getElementById("cl-desc").value,cargosPermitidos:cargos,items:getItems()};var idx=db.checklists.findIndex(function(x){return x.id==cl.id;});if(idx>=0)db.checklists[idx]=cl;else db.checklists.push(cl);cacheDB();showCrudLoading("Salvando checklist...");await apiPost({action:"saveChecklist",checklist:cl});hideCrudLoading();closeM("m-cl");rCLs();updDash();showT("✅ Checklist salvo!");}
 async function delCL(i){if(!confirm("Excluir este checklist?"))return;var c=db.checklists[i];db.checklists.splice(i,1);cacheDB();await apiPost({action:"deleteChecklist",id:c.id});rCLs();updDash();showT("🗑️ Checklist excluído");}
 
 // ============================================================
 // GEOLOCALIZAÇÃO
 // ============================================================
 function haversine(lat1,lon1,lat2,lon2){var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-function renderGeoArea(status,dist){var el=document.getElementById("geo-area");if(status==="loading")el.innerHTML="<div class='geo-card loading'><div class='geo-icon'>📡</div><div class='geo-title'>Verificando localização...</div></div>";else if(status==="ok")el.innerHTML="<div class='geo-card ok'><div class='geo-icon'>✅</div><div class='geo-title'>Check-in realizado!</div><div class='geo-dist'>"+Math.round(dist)+"m</div><div class='geo-sub'>Dentro do raio de 300m</div></div>";else if(status==="err-dist")el.innerHTML="<div class='geo-card err'><div class='geo-icon'>🚫</div><div class='geo-title'>Fora do endereço</div><div class='geo-dist' style='color:var(--rd)'>"+Math.round(dist)+"m</div><div class='geo-sub'>Máximo permitido: 300m</div></div>";else if(status==="err-geo")el.innerHTML="<div class='geo-card err'><div class='geo-icon'>❌</div><div class='geo-title'>Localização indisponível</div><div class='geo-sub'>Permita o acesso à localização</div></div>";else if(status==="no-coord")el.innerHTML="<div class='geo-card warn'><div class='geo-icon'>⚠️</div><div class='geo-title'>Sem coordenadas</div><div class='geo-sub'>Cadastre lat/lng na loja para habilitar check-in</div></div>";}
-async function checkGeo(loja){if(!loja.lat||!loja.lng){geoStatus="no-coord";geoOk=true;renderGeoArea("no-coord");return;}if(!navigator.geolocation){geoStatus="err-geo";geoOk=false;renderGeoArea("err-geo");return;}geoStatus="loading";renderGeoArea("loading");return new Promise(function(resolve){navigator.geolocation.getCurrentPosition(function(pos){var dist=haversine(pos.coords.latitude,pos.coords.longitude,loja.lat,loja.lng);geoData={lat:pos.coords.latitude,lng:pos.coords.longitude,dist:dist};if(dist<=1000){geoStatus="ok";geoOk=true;renderGeoArea("ok",dist);}else{geoStatus="err-dist";geoOk=false;renderGeoArea("err-dist",dist);}resolve();},function(){geoStatus="err-geo";geoOk=false;renderGeoArea("err-geo");resolve();},{enableHighAccuracy:true,timeout:10000});});}
+function renderGeoArea(status,dist){
+  var el=document.getElementById("geo-area");
+  if(status==="loading")
+    el.innerHTML="<div class='geo-card loading'><div class='geo-icon'>📡</div><div class='geo-title'>Verificando localização...</div></div>";
+  else if(status==="ok")
+    // Dentro do raio: confirmação simples, sem revelar distância
+    el.innerHTML="<div class='geo-card ok'><div class='geo-icon'>✅</div><div class='geo-title'>Check-in confirmado!</div></div>";
+  else if(status==="err-dist"){
+    // Fora do raio: mostra distância para o usuário se aproximar
+    var dm=Math.round(dist);
+    var msg=dm>=1000?"Você está a "+(dm/1000).toFixed(1)+"km de distância, aproxime-se do local da auditoria.":"Você está a "+dm+"m de distância, aproxime-se do local da auditoria.";
+    el.innerHTML="<div class='geo-card err'><div class='geo-icon'>📍</div><div class='geo-title'>"+msg+"</div></div>";
+  }
+  else if(status==="err-geo")
+    el.innerHTML="<div class='geo-card err'><div class='geo-icon'>❌</div><div class='geo-title'>Localização indisponível</div><div class='geo-sub'>Permita o acesso à localização e tente novamente</div></div>";
+}
+async function checkGeo(loja){
+  // Coordenadas sempre obrigatórias — loja sem lat/lng não pode ser cadastrada
+  if(!loja.lat||!loja.lng){geoStatus="no-coord";geoOk=false;document.getElementById("geo-area").innerHTML="";return;}
+  if(!navigator.geolocation){geoStatus="err-geo";geoOk=false;renderGeoArea("err-geo");return;}geoStatus="loading";renderGeoArea("loading");return new Promise(function(resolve){navigator.geolocation.getCurrentPosition(function(pos){var dist=haversine(pos.coords.latitude,pos.coords.longitude,loja.lat,loja.lng);geoData={lat:pos.coords.latitude,lng:pos.coords.longitude,dist:dist};if(dist<=1000){geoStatus="ok";geoOk=true;renderGeoArea("ok",dist);}else{geoStatus="err-dist";geoOk=false;renderGeoArea("err-dist",dist);}resolve();},function(){geoStatus="err-geo";geoOk=false;renderGeoArea("err-geo");resolve();},{enableHighAccuracy:true,timeout:10000});});}
 
 // ============================================================
 // EXECUÇÃO — SETUP
 // ============================================================
-function onLojaChange(){geoStatus="idle";geoData=null;geoOk=false;document.getElementById("geo-area").innerHTML="";}
+async function onLojaChange(){
+  geoStatus="idle";geoData=null;geoOk=false;
+  document.getElementById("geo-area").innerHTML="";
+  var lid=document.getElementById("ex-loja").value;
+  if(!lid) return;
+  var loja=db.lojas.find(function(l){return l.id==lid;});
+  if(loja) await checkGeo(loja);
+}
 function popExec(){
   var lEl=document.getElementById("ex-loja"),cEl=document.getElementById("ex-cl");
   // Filtra lojas pelo acesso do auditor
@@ -1004,10 +1069,10 @@ function buildWizard(cl,loja){
 function renderWizard(cl,loja){
   var total=(cl.items||[]).length,done=Object.keys(curAud.respostas).length;
   var pct=total?(done/total*100):0;
-  var geoInfo=geoData?" · "+Math.round(geoData.dist||0)+"m":"";
+  // geoInfo removido — não exibimos distância no wizard
 
   // Header com barra de progresso geral
-  var html="<div class='wiz-header'><h2>"+esc(cl.nome)+"</h2><div class='wiz-loja'>🏪 "+esc(loja.nome)+geoInfo+"</div>"+
+  var html="<div class='wiz-header'><h2>"+esc(cl.nome)+"</h2><div class='wiz-loja'>🏪 "+esc(loja.nome)+"</div>"+
     "<div class='wiz-prog-wrap'><div class='wiz-prog-label'><span>Progresso</span><span>"+done+" / "+total+"</span></div>"+
     "<div class='wiz-prog-bar'><div class='wiz-prog-fill' style='width:"+pct.toFixed(0)+"%'></div></div></div></div>";
 
@@ -1343,6 +1408,21 @@ function cancelAud(){
 
 /* Finaliza e salva auditoria */
 /* Mostra overlay de carregamento ao finalizar */
+function showCrudLoading(msg){
+  var el=document.createElement("div");
+  el.id="crud-overlay"; el.className="fin-overlay";
+  el.style.background="rgba(61,43,31,.92)";
+  el.innerHTML="<div class='fin-overlay-icon'>💾</div>"+
+    "<div class='fin-overlay-title'>"+(msg||"Salvando...")+"</div>"+
+    "<div class='fin-overlay-sub'>Aguarde um momento</div>"+
+    "<div class='fin-progress-bar'><div class='fin-progress-fill'></div></div>";
+  document.body.appendChild(el);
+}
+function hideCrudLoading(){
+  var el=document.getElementById("crud-overlay");
+  if(el)el.remove();
+}
+
 function showFinLoading(){
   var el=document.createElement("div");
   el.id="fin-overlay"; el.className="fin-overlay";
@@ -1397,14 +1477,18 @@ async function finAud(){
   var score=totalW?(scoreW/totalW*100):0;curAud.score=score;curAud.data=new Date().toISOString();
   var aud={id:String(Date.now()),lojaId:curAud.loja.id,checklistId:curAud.checklist.id,auditor:user.nome,data:curAud.data,score:score,respostas:curAud.respostas,obs:curAud.obs,fotos:curAud.fotos,geoLat:curAud.geoLat,geoLng:curAud.geoLng,acompanhante:curAud.acompanhante||'',sigAud:curAud.sig_aud||'',sigLoja:curAud.sig_loja||''};
   db.auditorias.push(aud);cacheDB();
-  // Salva assinaturas no localStorage indexadas pelo ID da auditoria
-  salvarAssinaturasLocal(aud.id, curAud.sig_aud||null, curAud.sig_loja||null);
-  await apiPost({action:"saveAuditoria",auditoria:aud});showRes(score);
+  // Comprime fotos e salva no localStorage junto com assinaturas
+  var fotosParaSalvar = await comprimirFotos(curAud.fotos||{});
+  salvarAssinaturasLocal(aud.id, curAud.sig_aud||null, curAud.sig_loja||null, fotosParaSalvar);
+  await apiPost({action:"saveAuditoria",auditoria:aud});
+  // Gera PDF automaticamente ao finalizar (sem modal de aviso)
+  await gerarPDF(curAud.loja,curAud.checklist,score,curAud.respostas,curAud.obs,curAud.fotos,user.nome,curAud.data,curAud.acompanhante||'',curAud.sig_aud||null,curAud.sig_loja||null);
+  hideFinLoading();
+  showRes(score);
 }
 
 /* Tela de resultado pós-auditoria */
 function showRes(score){
-  hideFinLoading();
   var cf=0,nc=0,na=0;Object.values(curAud.respostas).forEach(function(r){if(r==="cf")cf++;else if(r==="nc")nc++;else na++;});
   var col=score>=80?"var(--gn)":score>=60?"var(--ye)":"var(--rd)";var sts=score>=80?"✅ Aprovado":score>=60?"⚠️ Atenção":"❌ Crítico";var cls=score>=80?"bgn":score>=60?"bye":"brd";
   document.getElementById("res-content").innerHTML=
@@ -1430,25 +1514,69 @@ var SIG_KEY = "ll_sigs"; // chave no localStorage
 var SIG_MAX = 50;        // máximo de auditorias com assinaturas salvas
 
 /* Salva assinaturas de uma auditoria no localStorage */
-function salvarAssinaturasLocal(audId, sigAud, sigLoja){
+/* Comprime imagem base64 para ~60% JPEG reduzindo tamanho */
+function comprimirFoto(base64, cb){
   try {
-    var store = JSON.parse(localStorage.getItem(SIG_KEY)||"{}");
-    store[audId] = {sigAud: sigAud||null, sigLoja: sigLoja||null, ts: Date.now()};
-    // Mantém só as últimas SIG_MAX — remove as mais antigas
-    var ids = Object.keys(store).sort(function(a,b){ return store[a].ts - store[b].ts; });
-    while(ids.length > SIG_MAX){
-      delete store[ids.shift()];
-    }
-    localStorage.setItem(SIG_KEY, JSON.stringify(store));
-  } catch(e){ console.warn("Erro ao salvar assinatura local:", e); }
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement("canvas");
+      // Reduz resolução máxima para 800px
+      var maxW = 800, scale = Math.min(1, maxW / img.width);
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      cb(canvas.toDataURL("image/jpeg", 0.6));
+    };
+    img.onerror = function(){ cb(base64); };
+    img.src = base64;
+  } catch(e){ cb(base64); }
 }
 
-/* Recupera assinaturas de uma auditoria do localStorage */
+/* Comprime todas as fotos de uma auditoria e retorna promise */
+function comprimirFotos(fotosObj){
+  return new Promise(function(resolve){
+    var keys = Object.keys(fotosObj||{});
+    var result = {};
+    var pending = 0;
+    keys.forEach(function(k){
+      var arr = fotosObj[k];
+      if(!Array.isArray(arr)||!arr.length){ result[k]=[]; return; }
+      result[k] = new Array(arr.length);
+      arr.forEach(function(f, fi){
+        pending++;
+        comprimirFoto(f, function(compressed){
+          result[k][fi] = compressed;
+          pending--;
+          if(pending===0) resolve(result);
+        });
+      });
+    });
+    if(pending===0) resolve(result);
+  });
+}
+
+function salvarAssinaturasLocal(audId, sigAud, sigLoja, fotosComprimidas){
+  try {
+    var store = JSON.parse(localStorage.getItem(SIG_KEY)||"{}");
+    store[audId] = {
+      sigAud:  sigAud||null,
+      sigLoja: sigLoja||null,
+      fotos:   fotosComprimidas||{},
+      ts:      Date.now()
+    };
+    // Mantém só as últimas SIG_MAX — remove as mais antigas
+    var ids = Object.keys(store).sort(function(a,b){ return store[a].ts - store[b].ts; });
+    while(ids.length > SIG_MAX){ delete store[ids.shift()]; }
+    localStorage.setItem(SIG_KEY, JSON.stringify(store));
+  } catch(e){ console.warn("Erro ao salvar local:", e); }
+}
+
+/* Recupera assinaturas e fotos de uma auditoria do localStorage */
 function buscarAssinaturasLocal(audId){
   try {
     var store = JSON.parse(localStorage.getItem(SIG_KEY)||"{}");
-    return store[audId] || {sigAud:null, sigLoja:null};
-  } catch(e){ return {sigAud:null, sigLoja:null}; }
+    return store[audId] || {sigAud:null, sigLoja:null, fotos:{}};
+  } catch(e){ return {sigAud:null, sigLoja:null, fotos:{}}; }
 }
 
 // ============================================================
@@ -1535,34 +1663,34 @@ async function confirmarGerarPDF(){
 // WHATSAPP + PDF
 // ============================================================
 /* envWpp: abre o modal de aviso antes de gerar PDF+WhatsApp */
+/* envWpp: envia só o WhatsApp (PDF já foi gerado ao finalizar) */
 async function envWpp(){
-  abrirAvisoPDFAtual();
-}
-
-/* envWppReal: executa o envio após confirmação do modal */
-async function envWppReal(){
   var loja=curAud.loja,cl=curAud.checklist,score=curAud.score;
   var st=score>=80?"✅ APROVADO":score>=60?"⚠️ ATENÇÃO":"❌ CRÍTICO";
   var ncItems=(cl.items||[]).filter(function(_,idx){return curAud.respostas[idx]==="nc";});
   var msg="🏪 *RELATÓRIO DE AUDITORIA - LanLan*\n\n📍 *Loja:* "+loja.nome+"\n📋 *Checklist:* "+cl.nome+"\n👤 *Auditor:* "+user.nome+"\n👥 *Acompanhou:* "+(curAud.acompanhante||"—")+"\n📅 *Data:* "+new Date().toLocaleDateString("pt-BR")+"\n\n━━━━━━━━━━━━━━━━━━━━━\n🎯 *RESULTADO: "+score.toFixed(0)+"% — "+st+"*\n━━━━━━━━━━━━━━━━━━━━━\n\n";
   if(ncItems.length){msg+="❌ *Itens Não Conformes:*\n";ncItems.forEach(function(item,i){var idx=(cl.items||[]).indexOf(item);msg+=(i+1)+". "+item.pergunta+(curAud.obs[idx]?"\n   📝 "+curAud.obs[idx]:"")+  "\n";});msg+="\n";}
   msg+="_Relatório gerado pelo Sistema LanLan Auditoria_";
-  await gerarPDF(loja,cl,score,curAud.respostas,curAud.obs,curAud.fotos,user.nome,curAud.data,curAud.acompanhante||'',curAud.sig_aud||null,curAud.sig_loja||null);
   var phone=(loja.whatsapp||"").replace(/\D/g,"");
   if(phone)window.open("https://api.whatsapp.com/send?phone=55"+phone+"&text="+encodeURIComponent(msg),"_blank");
-  else showT("⚠️ WhatsApp não cadastrado. PDF baixado!");
+  else showT("⚠️ WhatsApp não cadastrado para esta loja.");
   closeM("m-res");cancelAud();updDash();
 }
+
+/* envWppReal: mantido para compatibilidade com modal de aviso */
+async function envWppReal(){ envWpp(); }
 async function gerarPDFFromAuditoria(audId){
   var a=db.auditorias.find(function(x){return x.id==audId;});
   if(!a) return;
   var loja=db.lojas.find(function(l){return l.id==a.lojaId;})||{nome:a.lojaId};
   var cl=db.checklists.find(function(c){return c.id==a.checklistId;})||{nome:a.checklistId,items:[]};
-  // Busca assinaturas do localStorage (salvas no dispositivo da auditoria)
+  // Busca assinaturas E fotos do localStorage
   var sigs=buscarAssinaturasLocal(audId);
   var sigAud=sigs.sigAud||null;
   var sigLoja=sigs.sigLoja||null;
-  await gerarPDF(loja,cl,a.score,a.respostas||{},a.obs||{},a.fotos||{},
+  // Fotos: usa as do localStorage se disponíveis, senão avisa no PDF
+  var fotos=sigs.fotos&&Object.keys(sigs.fotos).length>0 ? sigs.fotos : null;
+  await gerarPDF(loja,cl,a.score,a.respostas||{},a.obs||{},fotos,
     a.auditor,a.data,a.acompanhante||"",sigAud,sigLoja);
 }
 async function gerarPDF(loja,cl,score,respostas,obs,fotos,auditorNome,data,acompNome,sigAudData,sigLojaData){
@@ -1574,7 +1702,7 @@ async function gerarPDF(loja,cl,score,respostas,obs,fotos,auditorNome,data,acomp
   doc.setFillColor(255,248,243);doc.roundedRect(10,y,190,36,3,3,"F");doc.setDrawColor(232,82,10);doc.roundedRect(10,y,190,36,3,3,"S");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text("Loja: "+loja.nome,15,y+8);doc.text("Checklist: "+(cl.nome||""),15,y+16);doc.text("Auditor: "+(auditorNome||""),15,y+24);
   if(acompNome&&acompNome.length) doc.text("Acompanhou: "+(acompNome||"").substring(0,35),15,y+32);doc.text("Data: "+new Date(data||Date.now()).toLocaleDateString("pt-BR"),110,y+8);if(loja.endereco)doc.text((loja.endereco||"").substring(0,35),110,y+16);y+=44;
   var cats={};(cl.items||[]).forEach(function(item,idx){var cat=db.categorias.find(function(c){return c.id==item.categoriaId;});var cn=cat?((cat.emoji||"")+" "+cat.nome):"Geral";if(!cats[cn])cats[cn]=[];cats[cn].push({item:item,idx:idx});});
-  Object.keys(cats).forEach(function(cn){if(y>250){doc.addPage();y=15;}doc.setFillColor(232,82,10);doc.roundedRect(10,y,190,8,2,2,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(cn.replace(/[\u{1F000}-\u{1FFFF}]/gu,"").trim()||cn,14,y+5.5);y+=12;cats[cn].forEach(function(entry){if(y>260){doc.addPage();y=15;}var item=entry.item,idx=entry.idx,r=respostas[idx],ob=obs[idx]||"";var bc=r==="cf"?[240,253,244]:r==="nc"?[254,242,242]:[245,237,228],dc=r==="cf"?[34,197,94]:r==="nc"?[239,68,68]:[186,156,136],h=ob?14:10;doc.setFillColor(bc[0],bc[1],bc[2]);doc.roundedRect(10,y,190,h,2,2,"F");doc.setFillColor(dc[0],dc[1],dc[2]);doc.circle(17,y+5,2.5,"F");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(9);var pq=item.pergunta.length>62?item.pergunta.substring(0,59)+"...":item.pergunta;doc.text(pq,22,y+5.5);var rl=r==="cf"?"CONFORME":r==="nc"?"NAO CONFORME":r==="na"?"N/A":"—";doc.setFont("helvetica","bold");doc.setTextColor(dc[0],dc[1],dc[2]);doc.text(rl,198,y+5.5,{align:"right"});if(ob){doc.setTextColor(122,92,74);doc.setFont("helvetica","italic");doc.setFontSize(8);doc.text("Obs: "+ob.substring(0,70),22,y+11);}y+=h+2;if(fotos[idx]&&Array.isArray(fotos[idx])&&fotos[idx].length){fotos[idx].forEach(function(fd){if(y>215){doc.addPage();y=15;}try{doc.addImage(fd,"JPEG",14,y,55,44);}catch(e){}y+=48;});}});y+=4;});
+  Object.keys(cats).forEach(function(cn){if(y>250){doc.addPage();y=15;}doc.setFillColor(232,82,10);doc.roundedRect(10,y,190,8,2,2,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(cn.replace(/[\u{1F000}-\u{1FFFF}]/gu,"").trim()||cn,14,y+5.5);y+=12;cats[cn].forEach(function(entry){if(y>260){doc.addPage();y=15;}var item=entry.item,idx=entry.idx,r=respostas[idx],ob=obs[idx]||"";var bc=r==="cf"?[240,253,244]:r==="nc"?[254,242,242]:[245,237,228],dc=r==="cf"?[34,197,94]:r==="nc"?[239,68,68]:[186,156,136],h=ob?14:10;doc.setFillColor(bc[0],bc[1],bc[2]);doc.roundedRect(10,y,190,h,2,2,"F");doc.setFillColor(dc[0],dc[1],dc[2]);doc.circle(17,y+5,2.5,"F");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(9);var pq=item.pergunta.length>62?item.pergunta.substring(0,59)+"...":item.pergunta;doc.text(pq,22,y+5.5);var rl=r==="cf"?"CONFORME":r==="nc"?"NAO CONFORME":r==="na"?"N/A":"—";doc.setFont("helvetica","bold");doc.setTextColor(dc[0],dc[1],dc[2]);doc.text(rl,198,y+5.5,{align:"right"});if(ob){doc.setTextColor(122,92,74);doc.setFont("helvetica","italic");doc.setFontSize(8);doc.text("Obs: "+ob.substring(0,70),22,y+11);}y+=h+2;if(!fotos){doc.setTextColor(180,100,50);doc.setFont("helvetica","italic");doc.setFontSize(8);doc.text("Fotos nao disponiveis neste dispositivo.",22,y+4);doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");y+=10;}else if(fotos[idx]&&Array.isArray(fotos[idx])&&fotos[idx].length){fotos[idx].forEach(function(fd){if(y>215){doc.addPage();y=15;}try{doc.addImage(fd,"JPEG",14,y,55,44);}catch(e){}y+=48;});}});y+=4;});
   if(y>220){doc.addPage();y=15;}
   doc.setFillColor(250,248,245);doc.roundedRect(10,y,190,42,3,3,"F");
   doc.setDrawColor(200,180,170);doc.roundedRect(10,y,190,42,3,3,"S");
