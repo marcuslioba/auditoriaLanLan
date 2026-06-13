@@ -14,6 +14,8 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
 /* LOADING */
 #ls{position:fixed;inset:0;background:var(--or);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;z-index:9999;transition:opacity .5s}
 #ls img{width:120px;height:120px;border-radius:50%;box-shadow:0 8px 32px rgba(0,0,0,.3);animation:pulse 1.5s ease-in-out infinite}
+#ls-frase{font-family:Georgia,"Times New Roman",serif;font-size:14px;font-style:italic;color:rgba(245,197,24,.85);text-align:center;max-width:280px;line-height:1.6;min-height:52px;transition:opacity .6s ease;padding:0 16px}
+#ls-autor{font-family:Georgia,serif;font-size:11px;color:rgba(245,197,24,.55);text-align:center;margin-top:4px;transition:opacity .6s ease;letter-spacing:.5px}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 .lbar{width:180px;height:4px;background:rgba(255,255,255,.3);border-radius:2px;overflow:hidden}
 .lfill{height:100%;background:var(--ye);border-radius:2px;animation:ld 1.8s ease-in-out forwards}
@@ -150,6 +152,40 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
 .pthumb-del{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--rd);color:#fff;border:none;border-radius:50%;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .wiz-footer{display:flex;gap:10px;margin-top:16px;position:sticky;bottom:calc(var(--navh) + 8px);background:var(--g50);padding:8px 0;z-index:50}
 .wiz-footer .btn{flex:1;justify-content:center}
+/* MODAL AVISO PDF */
+.pdf-aviso-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:center;justify-content:center;padding:20px}
+.pdf-aviso-overlay.open{display:flex;animation:fi .2s}
+.pdf-aviso-box{background:#fff;border-radius:20px;padding:24px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.pdf-aviso-icon{font-size:40px;text-align:center;margin-bottom:12px}
+.pdf-aviso-title{font-family:"Nunito",sans-serif;font-weight:900;font-size:17px;color:var(--g800);margin-bottom:10px;text-align:center}
+.pdf-aviso-txt{font-size:13px;color:var(--g600);line-height:1.6;margin-bottom:16px;background:var(--g100);border-radius:10px;padding:12px}
+.pdf-aviso-check{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;cursor:pointer}
+.pdf-aviso-check input{width:18px;height:18px;accent-color:var(--or);flex-shrink:0;margin-top:2px;cursor:pointer}
+.pdf-aviso-check span{font-size:13px;font-weight:600;color:var(--g800);line-height:1.4}
+.pdf-aviso-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--or),var(--ord));color:#fff;border:none;border-radius:12px;font-family:"Nunito",sans-serif;font-size:15px;font-weight:800;cursor:pointer;opacity:.4;pointer-events:none;transition:opacity .2s}
+.pdf-aviso-btn.ok{opacity:1;pointer-events:auto}
+.pdf-aviso-cancel{width:100%;padding:10px;background:none;border:none;color:var(--g400);font-size:13px;cursor:pointer;margin-top:8px}
+/* LOADING OVERLAY AO FINALIZAR */
+.fin-overlay{position:fixed;inset:0;background:rgba(232,82,10,.92);z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;animation:fi .2s}
+.fin-overlay-icon{font-size:56px;animation:pulse 1s ease-in-out infinite}
+.fin-overlay-title{font-family:"Nunito",sans-serif;font-weight:900;font-size:20px;color:#fff}
+.fin-overlay-sub{font-size:14px;color:rgba(255,255,255,.85)}
+.fin-progress-bar{width:220px;height:6px;background:rgba(255,255,255,.3);border-radius:3px;overflow:hidden}
+.fin-progress-fill{height:100%;background:var(--ye);border-radius:3px;animation:fin-load 2s ease-in-out forwards}
+@keyframes fin-load{0%{width:0%}60%{width:75%}90%{width:92%}100%{width:100%}}
+/* TOGGLE ACESSO TOTAL */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--g100)}
+.toggle-label{font-size:14px;font-weight:600;color:var(--g800)}
+.toggle-sub{font-size:11px;color:var(--g400);margin-top:2px}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--g200);border-radius:24px;cursor:pointer;transition:.3s}
+.toggle-slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.toggle-slider{background:var(--or)}
+input:checked+.toggle-slider:before{transform:translateX(20px)}
+.aud-loja-lista{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.aud-loja-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--g50);border-radius:8px;font-size:13px}
+.aud-loja-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);flex-shrink:0}
 /* ASSINATURA NO WIZARD */
 .wiz-sig-section{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-top:3px solid var(--or)}
 .wiz-sig-title{font-family:"Nunito",sans-serif;font-weight:900;font-size:16px;margin-bottom:4px;color:var(--g800)}
@@ -196,7 +232,7 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
 </head>
 <body>
 
-<div id="ls"><img id="ls-logo" alt="LanLan"><div class="lbar"><div class="lfill"></div></div><p style="color:rgba(255,255,255,.8);font-size:13px;font-weight:600">LanLan Auditoria...</p></div>
+<div id="ls"><img id="ls-logo" alt="LanLan"><div class="lbar"><div class="lfill"></div></div><div id="ls-frase"></div><div id="ls-autor"></div></div>
 
 <div id="login" style="display:flex">
   <div class="lcard">
@@ -245,6 +281,7 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
   <div class="filter-bar">
     <div class="fg"><label class="flb">📅 De</label><input type="date" class="finput" id="f-de"></div>
     <div class="fg"><label class="flb">Até</label><input type="date" class="finput" id="f-ate"></div>
+    <div class="fg"><label class="flb">🏪 Loja</label><select class="fselect" id="f-loja"><option value="">Todas</option></select></div>
     <div class="fg"><label class="flb">👤 Auditor</label><select class="fselect" id="f-auditor"><option value="">Todos</option></select></div>
     <button class="btn btnp btnsm" onclick="applyFilters()">🔍</button>
     <button class="btn btns btnsm" onclick="clearFilters()">✕</button>
@@ -315,6 +352,11 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
     <button class="btn btns btnsm" style="margin-top:8px;width:100%" onclick="captureLojaGeo()">📍 Capturar localização atual</button></div>
   <div class="fg"><label class="flb">WhatsApp</label><input type="tel" class="finput" id="loja-wpp" placeholder="(00) 00000-0000" maxlength="15"></div>
   <div class="fg"><label class="flb">Responsável</label><input class="finput" id="loja-resp" placeholder="Nome do gerente"></div>
+  <div class="fg">
+    <label class="flb">👤 Auditores autorizados</label>
+    <p style="font-size:11px;color:var(--g400);margin-bottom:8px">Gerencie no cadastro de cada auditor</p>
+    <div id="loja-auds-lista" class="aud-loja-lista"></div>
+  </div>
   <div class="brow"><button class="btn btns" onclick="closeM('m-loja')">Cancelar</button><button class="btn btnp" style="flex:1" onclick="saveLoja()">Salvar</button></div>
 </div></div>
 
@@ -326,6 +368,16 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
     <button class="btn btns btnsm" onclick="genPIN()" style="flex-shrink:0">🔄 Gerar</button></div>
     <input type="hidden" id="aud-pin"></div>
   <div class="fg"><label class="flb">Cargo *</label><select class="fselect" id="aud-cargo"></select></div>
+  <div class="fg">
+    <div class="toggle-row">
+      <div><div class="toggle-label">🏪 Acesso a todas as lojas</div><div class="toggle-sub">Desative para restringir lojas específicas</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="aud-acesso-total" checked onchange="toggleLojasSel()"><span class="toggle-slider"></span></label>
+    </div>
+    <div id="aud-lojas-wrap" style="display:none;margin-top:12px">
+      <label class="flb">Lojas autorizadas</label>
+      <div id="aud-lojas-checks" class="cargo-check-list"></div>
+    </div>
+  </div>
   <div class="brow"><button class="btn btns" onclick="closeM('m-aud')">Cancelar</button><button class="btn btnp" style="flex:1" onclick="saveAud()">Salvar</button></div>
 </div></div>
 
@@ -378,12 +430,7 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
 
 <div class="moverlay" id="m-res"><div class="modal"><div class="mhandle"></div>
   <div class="mtitle">✅ Auditoria Concluída</div><div id="res-content"></div>
-  <div class="fg" style="margin-top:16px"><label class="flb">Assinatura</label>
-    <canvas id="sigc" width="320" height="110"></canvas>
-    <button class="btn btns btnsm" style="margin-top:6px" onclick="clearSig()">Limpar</button></div>
-  <div class="brow" style="margin-top:16px">
-    <button class="btn btns" onclick="closeM('m-res')">Fechar</button>
-    <button class="btn btnp" style="flex:1" onclick="envWpp()">📤 WhatsApp + PDF</button></div>
+  <div class="brow" style="margin-top:20px"><button class="btn btns" onclick="closeM('m-res')">Fechar</button><button class="btn btnp" style="flex:1" onclick="envWpp()">📤 WhatsApp + PDF</button></div>
 </div></div>
 
 <div class="moverlay fullpage" id="m-view"><div class="modal" style="border-radius:0;max-height:100vh;padding-top:16px">
@@ -396,6 +443,44 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--g50);color:var(--g800
 <div class="moverlay" id="m-pin-reset"><div class="modal"><div class="mhandle"></div>
   <div class="mtitle">🔐 Resetar PIN</div><div id="pin-reset-content"></div>
 </div></div>
+
+<!-- MODAL AVISO PDF — completo (primeira vez) -->
+<div class="pdf-aviso-overlay" id="pdf-aviso-overlay">
+  <div class="pdf-aviso-box">
+    <div class="pdf-aviso-icon">📄</div>
+    <div class="pdf-aviso-title">Antes de baixar o PDF</div>
+    <div class="pdf-aviso-txt">
+      ⚠️ <strong>Guarde o PDF caso precise no futuro.</strong><br><br>
+      As assinaturas ficam salvas <strong>somente neste dispositivo</strong> e por tempo limitado.
+      Se abrir o histórico em outro celular ou após limpar os dados do navegador,
+      as assinaturas não estarão disponíveis no PDF.<br><br>
+      Recomendamos salvar o PDF imediatamente após a auditoria.
+    </div>
+    <label class="pdf-aviso-check">
+      <input type="checkbox" id="pdf-aviso-chk" onchange="togglePdfBtn()">
+      <span>Li e estou ciente que as assinaturas são armazenadas localmente neste dispositivo.</span>
+    </label>
+    <label class="pdf-aviso-check" style="margin-top:-4px">
+      <input type="checkbox" id="pdf-aviso-nao-mostrar" onchange="togglePdfBtn()">
+      <span style="color:var(--g400)">Não quero ver essa mensagem novamente.</span>
+    </label>
+    <p style="font-size:11px;color:var(--g400);text-align:center;margin-bottom:12px;font-style:italic">🕐 Este PDF pode expirar. Salve-o nos seus arquivos.</p>
+    <button class="pdf-aviso-btn" id="pdf-aviso-btn" onclick="confirmarGerarPDF()">📥 Baixar PDF</button>
+    <button class="pdf-aviso-cancel" onclick="cancelarAvisoPDF()">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL AVISO PDF — simplificado (já viu antes) -->
+<div class="pdf-aviso-overlay" id="pdf-aviso-simples">
+  <div class="pdf-aviso-box" style="max-width:320px">
+    <div class="pdf-aviso-icon">📥</div>
+    <div class="pdf-aviso-title">Confirmar download</div>
+    <p style="font-size:13px;color:var(--g600);text-align:center;margin-bottom:16px">Deseja baixar o PDF desta auditoria?</p>
+    <p style="font-size:11px;color:var(--g400);text-align:center;margin-bottom:16px;font-style:italic">🕐 Este PDF pode expirar. Salve-o nos seus arquivos.</p>
+    <button class="pdf-aviso-btn ok" onclick="confirmarGerarPDF()">📥 Baixar PDF</button>
+    <button class="pdf-aviso-cancel" onclick="cancelarAvisoPDF()">Cancelar</button>
+  </div>
+</div>
 
 <script>
 // ============================================================
@@ -435,6 +520,37 @@ var currentFilters = {};
 // ============================================================
 // INIT
 // ============================================================
+var FRASES=[
+  {txt:"O LanLan é feito de um monte de pequenas coisas.",autor:"— Erlânio Cavalcante"},
+  {txt:"Não trabalhamos com coxinhas, trabalhamos com pessoas.",autor:"— Morgana Kalley"},
+  {txt:"Qualidade nunca é acidente; é resultado de um esforço inteligente.",autor:"— John Ruskin"},
+  {txt:"Cuide dos clientes e o negócio cuidará de si mesmo.",autor:"— Ray Kroc"},
+  {txt:"Detalhes fazem a perfeição, e a perfeição não é um detalhe.",autor:"— Michelangelo"},
+  {txt:"Inovar é o que distingue um líder de um seguidor.",autor:"— Steve Jobs"},
+  {txt:"Sua marca é o que falam de você quando você sai da sala.",autor:"— Jeff Bezos"},
+  {txt:"O sucesso nasce do querer, da determinação e persistência.",autor:"— Ayrton Senna"},
+  {txt:"Excelência não é uma habilidade. É uma atitude.",autor:"— Ralph Marston"},
+  {txt:"Seja a mudança que você quer ver no mundo.",autor:"— Gandhi"}
+];
+function exibirFrasesLoading(){
+  var frEl=document.getElementById("ls-frase"),auEl=document.getElementById("ls-autor");
+  if(!frEl||!auEl)return;
+  var lista=FRASES.slice().sort(function(){return Math.random()-.5;});
+  var i=0;
+  function mostrar(){
+    if(!document.getElementById("ls"))return;
+    var f=lista[i%lista.length];
+    frEl.style.opacity="0";auEl.style.opacity="0";
+    setTimeout(function(){
+      frEl.textContent='"'+f.txt+'"';
+      auEl.textContent=f.autor;
+      frEl.style.opacity="1";auEl.style.opacity="1";
+    },500);
+    i++;
+  }
+  mostrar();
+  return setInterval(mostrar,3200);
+}
 window.addEventListener("load",function(){
   document.getElementById("ls-logo").src    = LOGODATA;
   document.getElementById("login-logo").src = LOGODATA;
@@ -447,23 +563,20 @@ window.addEventListener("load",function(){
   pinEl.addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
   var wpp=document.getElementById("loja-wpp");
   if(wpp)wpp.addEventListener("input",function(e){e.target.value=phoneMask(e.target.value);});
-  sigCanvas=document.getElementById("sigc"); sigCtx=sigCanvas.getContext("2d");
-  sigCtx.strokeStyle="#3D2B1F"; sigCtx.lineWidth=2; sigCtx.lineCap="round";
-  sigCanvas.addEventListener("mousedown",function(e){sigDraw=true;sigCtx.beginPath();sigCtx.moveTo(e.offsetX,e.offsetY);});
-  sigCanvas.addEventListener("mousemove",function(e){if(sigDraw){sigCtx.lineTo(e.offsetX,e.offsetY);sigCtx.stroke();}});
-  sigCanvas.addEventListener("mouseup",function(){sigDraw=false;});
-  sigCanvas.addEventListener("touchstart",function(e){e.preventDefault();sigDraw=true;var t=e.touches[0],r=sigCanvas.getBoundingClientRect();sigCtx.beginPath();sigCtx.moveTo(t.clientX-r.left,t.clientY-r.top);});
-  sigCanvas.addEventListener("touchmove",function(e){e.preventDefault();if(sigDraw){var t=e.touches[0],r=sigCanvas.getBoundingClientRect();sigCtx.lineTo(t.clientX-r.left,t.clientY-r.top);sigCtx.stroke();}});
-  sigCanvas.addEventListener("touchend",function(){sigDraw=false;});
+  // Canvas sigc foi removido do modal (assinaturas agora são no wizard)
+  // Mantemos as variáveis para compatibilidade mas não inicializamos
+  sigCanvas = null; sigCtx = null;
   document.querySelectorAll(".moverlay").forEach(function(o){o.addEventListener("click",function(e){if(e.target===o)o.classList.remove("open");});});
+  var _fraseTimer=exibirFrasesLoading();
   loadAll().then(function(){
     setTimeout(function(){
+      if(_fraseTimer)clearInterval(_fraseTimer);
       document.getElementById("ls").style.opacity="0";
       setTimeout(function(){document.getElementById("ls").style.display="none";document.getElementById("login").style.display="flex";},500);
     },1800);
   });
 });
-function clearSig(){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);}
+function clearSig(){if(sigCtx&&sigCanvas){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);}}
 
 // ============================================================
 // API
@@ -498,7 +611,6 @@ async function doLogin(){
   if(pin.length<4){showLerr("Digite seu PIN");return;}
   document.getElementById("lbtxt").innerHTML='<span class="spin"></span>';
   await loadAll();
-  if(pin==="000000"){user={id:"admin",nome:"Administrador",cargo:"admin",pin:"000000"};loginOk();return;}
   var a=db.auditores.find(function(x){return String(x.pin)===String(pin)||String(x.telefone)===String(pin);});
   if(a){user=a;loginOk();}else{document.getElementById("lbtxt").textContent="Entrar →";showLerr("PIN incorreto.");}
 }
@@ -516,7 +628,7 @@ function loginOk(){
     document.getElementById("pg-auditor").style.display="none";document.getElementById("bnav").style.display="flex";
     document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
     document.getElementById("pg-dash").classList.add("active");document.querySelector(".nitem").classList.add("active");
-    renderAll();updDash();popFilterAuditores();
+    renderAll();updDash();popFilterAuditores();popFilterLojas();
   }
 }
 function doLogout(){
@@ -539,7 +651,7 @@ function showP(name,btn){
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
   document.querySelectorAll(".nitem").forEach(function(n){n.classList.remove("active");});
   var pg=document.getElementById("pg-"+name);if(pg)pg.classList.add("active");if(btn)btn.classList.add("active");
-  if(name==="exec")popExec();if(name==="dash"){updDash();popFilterAuditores();}
+  if(name==="exec")popExec();if(name==="dash"){updDash();popFilterAuditores();popFilterLojas();}
 }
 function irParaExec(){
   // Reseta estado da auditoria anterior
@@ -582,10 +694,19 @@ function renderAudHist(){var el=document.getElementById("aud-hist-list");var min
 // ============================================================
 // DASHBOARD
 // ============================================================
+function popFilterLojas(){
+  var sel=document.getElementById("f-loja"); if(!sel) return;
+  var cur=sel.value;
+  sel.innerHTML="<option value=''>Todas</option>"+
+    db.lojas.map(function(l){
+      return "<option value='"+l.id+"'"+(l.id==cur?" selected":"")+">"+esc(l.nome)+"</option>";
+    }).join("");
+}
+
 function popFilterAuditores(){var sel=document.getElementById("f-auditor");if(!sel)return;var cur=sel.value;sel.innerHTML="<option value=''>Todos</option>"+db.auditores.map(function(a){return "<option value='"+esc(a.nome)+"'"+(a.nome==cur?" selected":"")+">"+esc(a.nome)+"</option>";}).join("");}
-function applyFilters(){currentFilters={de:document.getElementById("f-de").value,ate:document.getElementById("f-ate").value,auditor:document.getElementById("f-auditor").value};updDash(true);}
-function clearFilters(){document.getElementById("f-de").value="";document.getElementById("f-ate").value="";document.getElementById("f-auditor").value="";currentFilters={};updDash(false);}
-function filterAuditorias(list){return list.filter(function(a){var ok=true;if(currentFilters.de)ok=ok&&new Date(a.data)>=new Date(currentFilters.de);if(currentFilters.ate)ok=ok&&new Date(a.data)<=new Date(currentFilters.ate+"T23:59:59");if(currentFilters.auditor)ok=ok&&a.auditor===currentFilters.auditor;return ok;});}
+function applyFilters(){currentFilters={de:document.getElementById("f-de").value,ate:document.getElementById("f-ate").value,auditor:document.getElementById("f-auditor").value,loja:document.getElementById("f-loja")?document.getElementById("f-loja").value:""};updDash(true);}
+function clearFilters(){document.getElementById("f-de").value="";document.getElementById("f-ate").value="";document.getElementById("f-auditor").value="";var fl=document.getElementById("f-loja");if(fl)fl.value="";currentFilters={};updDash(false);}
+function filterAuditorias(list){return list.filter(function(a){var ok=true;if(currentFilters.de)ok=ok&&new Date(a.data)>=new Date(currentFilters.de);if(currentFilters.ate)ok=ok&&new Date(a.data)<=new Date(currentFilters.ate+"T23:59:59");if(currentFilters.auditor)ok=ok&&a.auditor===currentFilters.auditor;if(currentFilters.loja)ok=ok&&String(a.lojaId)===String(currentFilters.loja);return ok;});}
 function updDash(filtered){
   document.getElementById("st-lojas").textContent=db.lojas.length;document.getElementById("st-aud").textContent=db.auditores.length;document.getElementById("st-cl").textContent=db.checklists.length;document.getElementById("st-exec").textContent=db.auditorias.length;
   var list=filtered?filterAuditorias(db.auditorias):db.auditorias;
@@ -613,18 +734,60 @@ function viewAuditoria(audId){
   var html="<div style='text-align:center;margin-bottom:20px'><div class='scircle' style='border-color:"+col+"'><div class='snum2' style='color:"+col+"'>"+sc.toFixed(0)+"%</div><div class='slb2'>Pontuação</div></div><span class='badge "+cls+"' style='font-size:14px;padding:6px 16px'>"+sts+"</span></div><div class='card' style='margin-bottom:16px'><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px'><span style='color:var(--g400)'>🏪 Loja</span><strong>"+esc(loja.nome)+"</strong></div><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px'><span style='color:var(--g400)'>📋 Checklist</span><strong>"+esc(cl.nome)+"</strong></div><div style='display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px'><span style='color:var(--g400)'>👤 Auditor</span><strong>"+esc(a.auditor||"—")+"</strong></div><div style='display:flex;justify-content:space-between;font-size:13px'><span style='color:var(--g400)'>📅 Data</span><strong>"+(a.data?new Date(a.data).toLocaleString("pt-BR"):"—")+"</strong></div></div>";
   var cats={};(cl.items||[]).forEach(function(item,idx){var cat=db.categorias.find(function(c){return c.id==item.categoriaId;});var cn=cat?((cat.emoji||"")+" "+cat.nome):"📌 Geral";if(!cats[cn])cats[cn]=[];cats[cn].push({item:item,idx:idx});});
   Object.keys(cats).forEach(function(cn){html+="<div class='rel-section'><div class='rel-cat-hdr'>"+cn+"</div>";cats[cn].forEach(function(e){var r=respostas[e.idx]||"—";var rClass=r==="cf"?"cf":r==="nc"?"nc":"na";var rLabel=r==="cf"?"✅ Conforme":r==="nc"?"❌ Não Conforme":r==="na"?"➖ N/A":"— Sem resposta";var ob=obs[e.idx]||"";var ff=Array.isArray(fotos[e.idx])?fotos[e.idx]:[];html+="<div class='rel-item "+rClass+"'><div class='rel-q'>"+(e.idx+1)+". "+esc(e.item.pergunta)+"</div><div class='rel-ans "+rClass+"'>"+rLabel+"</div>"+(ob?"<div class='rel-obs'>📝 "+esc(ob)+"</div>":"")+(ff.length?"<div class='rel-fotos'>"+ff.map(function(f){return "<img src='"+f+"' class='rel-foto'>";}).join("")+"</div>":"")+  "</div>";});html+="</div>";});
-  html+="<button class='btn btnp btnfull' style='margin-top:8px' onclick='gerarPDFFromAuditoria(\""+audId+"\")'>📄 Baixar PDF</button>";
+  html+="<button class='btn btnp btnfull' style='margin-top:8px' onclick='abrirAvisoPDF(\""+audId+"\")'>📄 Baixar PDF</button>";
   document.getElementById("view-content").innerHTML=html;openM("m-view");
 }
 
 // ============================================================
 // CARGOS — CRUD
 // ============================================================
+
+/* Mostra/esconde seleção de lojas conforme toggle */
+function toggleLojasSel(){
+  var chk=document.getElementById("aud-acesso-total");
+  var wrap=document.getElementById("aud-lojas-wrap");
+  if(!wrap)return;
+  wrap.style.display=chk&&!chk.checked?"block":"none";
+  if(chk&&!chk.checked)renderLojasChecks([]);
+}
+
+/* Renderiza checkboxes de lojas no modal de auditor */
+function renderLojasChecks(selectedIds){
+  var el=document.getElementById("aud-lojas-checks");if(!el)return;
+  selectedIds=selectedIds||[];
+  el.innerHTML="";
+  if(!db.lojas.length){el.innerHTML="<p style='font-size:12px;color:var(--g400)'>Nenhuma loja cadastrada</p>";return;}
+  db.lojas.forEach(function(l){
+    var checked=selectedIds.some(function(id){return String(id)===String(l.id);});
+    var lbl=document.createElement("label");
+    lbl.className="cargo-chk-label"+(checked?" checked":"");
+    var inp=document.createElement("input");
+    inp.type="checkbox"; inp.value=l.id;
+    if(checked)inp.checked=true;
+    inp.onchange=function(){this.parentElement.classList.toggle("checked",this.checked);};
+    var txt=document.createTextNode("\uD83C\uDFEA "+l.nome);
+    lbl.appendChild(inp); lbl.appendChild(txt);
+    el.appendChild(lbl);
+  });
+}
+
 function renderCargosSelect(selectedId){
   var sel=document.getElementById("aud-cargo");if(!sel)return;
   var fixed=[{id:"admin",nome:"Administrador"},{id:"supervisor",nome:"Supervisor"},{id:"auditor",nome:"Auditor"}];
-  var todos=fixed.slice();db.cargos.forEach(function(c){if(!todos.find(function(f){return f.id===c.id;}))todos.push(c);});
-  sel.innerHTML=todos.map(function(c){return "<option value='"+c.id+"'"+(c.id==selectedId?" selected":"")+">"+esc(c.nome)+"</option>";}).join("");
+  var todos=fixed.slice();
+  db.cargos.forEach(function(c){if(!todos.find(function(f){return f.id===c.id;}))todos.push(c);});
+  // Verifica se o cargo selecionado existe na lista
+  var existe=todos.find(function(c){return String(c.id)===String(selectedId);});
+  var opts="";
+  // Cargo legado/invalido: force nova selecao
+  if(!existe&&selectedId){
+    opts+='<option value="" selected style="color:#EF4444">Cargo invalido - selecione um novo</option>';
+  }
+  opts+=todos.map(function(c){
+    var isSel=existe&&String(c.id)===String(selectedId)?" selected":"";
+    return "<option value='"+c.id+"'"+isSel+">"+esc(c.nome)+"</option>";
+  }).join("");
+  sel.innerHTML=opts;
 }
 function renderCargosCheckboxes(selectedIds){
   var el=document.getElementById("cl-cargos-list");if(!el)return;selectedIds=selectedIds||[];
@@ -634,33 +797,123 @@ function renderCargosCheckboxes(selectedIds){
 }
 function abrirNovoCargo(){document.getElementById("mt-cargo").textContent="Novo Cargo";document.getElementById("cargo-eid").value="";document.getElementById("cargo-nome").value="";document.getElementById("cargo-desc").value="";openM("m-cargo");}
 function editCargo(i){var c=db.cargos[i];document.getElementById("mt-cargo").textContent="Editar Cargo";document.getElementById("cargo-eid").value=c.id||"";document.getElementById("cargo-nome").value=c.nome||"";document.getElementById("cargo-desc").value=c.descricao||"";openM("m-cargo");}
-async function saveCargo(){var nome=document.getElementById("cargo-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var c={id:document.getElementById("cargo-eid").value||String(Date.now()),nome:nome,descricao:document.getElementById("cargo-desc").value};var idx=db.cargos.findIndex(function(x){return x.id==c.id;});if(idx>=0)db.cargos[idx]=c;else db.cargos.push(c);cacheDB();await apiPost({action:"saveCargo",cargo:c});closeM("m-cargo");rCargos();showT("✅ Cargo salvo!");}
+async function saveCargo(){var nome=document.getElementById("cargo-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var c={id:document.getElementById("cargo-eid").value||String(Date.now()),nome:nome,descricao:document.getElementById("cargo-desc").value};var idx=db.cargos.findIndex(function(x){return x.id==c.id;});if(idx>=0)db.cargos[idx]=c;else db.cargos.push(c);cacheDB();btnLoading("#m-cargo .btnp",true);await apiPost({action:"saveCargo",cargo:c});btnLoading("#m-cargo .btnp",false,"Salvar");closeM("m-cargo");rCargos();showT("✅ Cargo salvo!");}
 async function delCargo(i){if(!confirm("Excluir este cargo?"))return;var c=db.cargos[i];db.cargos.splice(i,1);cacheDB();await apiPost({action:"deleteCargo",id:c.id});rCargos();showT("🗑️ Cargo excluído");}
+
+// ============================================================
+// HELPER: loading nos botões salvar
+// ============================================================
+function btnLoading(selector, loading, originalText){
+  var btn=document.querySelector(selector);
+  if(!btn) return;
+  if(loading){
+    btn.disabled=true;
+    btn.dataset.orig=btn.textContent;
+    btn.innerHTML='<span class="spin"></span> Salvando...';
+  } else {
+    btn.disabled=false;
+    btn.textContent=originalText||btn.dataset.orig||'Salvar';
+  }
+}
 
 // ============================================================
 // LOJAS — CRUD
 // ============================================================
+/* Exibe no modal da loja quais auditores têm acesso (somente leitura) */
+function renderAuditoresNaLoja(lojaId){
+  var el=document.getElementById("loja-auds-lista");if(!el)return;
+  var autorizados=db.auditores.filter(function(a){
+    if(a.acessoTotal===false){
+      return (a.lojasPermitidas||[]).some(function(id){return String(id)===String(lojaId);});
+    }
+    return true;
+  });
+  if(!autorizados.length){
+    el.innerHTML="<p style='font-size:12px;color:var(--g400)'>Nenhum auditor vinculado. Auditores com acesso total podem auditar esta loja.</p>";
+    return;
+  }
+  el.innerHTML=autorizados.map(function(a){
+    var co=db.cargos.find(function(c){return c.id==a.cargo||c.nome==a.cargo;});
+    var cargo=co?co.nome:(a.cargo||"—");
+    var tag=a.acessoTotal!==false?" <span style=\"font-size:10px;color:var(--g400)\">(acesso total)</span>":"";
+    return "<div class=\"aud-loja-item\"><div class=\"aud-loja-dot\"></div>"+esc(a.nome)+" <span style=\"color:var(--g400);font-size:11px\">"+esc(cargo)+"</span>"+tag+"</div>";
+  }).join("");
+}
+
 function captureLojaGeo(){if(!navigator.geolocation){showT("Geolocalização não suportada");return;}showT("📍 Capturando...");navigator.geolocation.getCurrentPosition(function(pos){document.getElementById("loja-lat").value=pos.coords.latitude.toFixed(7);document.getElementById("loja-lng").value=pos.coords.longitude.toFixed(7);showT("✅ Localização capturada!");},function(){showT("❌ Não foi possível obter localização");});}
-function editLoja(i){var l=db.lojas[i];document.getElementById("mt-loja").textContent="Editar Loja";document.getElementById("loja-eid").value=l.id||"";document.getElementById("loja-nome").value=l.nome||"";document.getElementById("loja-end").value=l.endereco||"";document.getElementById("loja-lat").value=l.lat||"";document.getElementById("loja-lng").value=l.lng||"";document.getElementById("loja-wpp").value=l.whatsapp||"";document.getElementById("loja-resp").value=l.responsavel||"";openM("m-loja");}
-async function saveLoja(){var nome=document.getElementById("loja-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var l={id:document.getElementById("loja-eid").value||String(Date.now()),nome:nome,endereco:document.getElementById("loja-end").value,lat:parseFloat(document.getElementById("loja-lat").value)||null,lng:parseFloat(document.getElementById("loja-lng").value)||null,whatsapp:document.getElementById("loja-wpp").value,responsavel:document.getElementById("loja-resp").value};var idx=db.lojas.findIndex(function(x){return x.id==l.id;});if(idx>=0)db.lojas[idx]=l;else db.lojas.push(l);cacheDB();await apiPost({action:"saveLoja",loja:l});closeM("m-loja");rLojas();updDash();["loja-eid","loja-nome","loja-end","loja-lat","loja-lng","loja-wpp","loja-resp"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("mt-loja").textContent="Nova Loja";showT("✅ Loja salva!");}
+function editLoja(i){var l=db.lojas[i];document.getElementById("mt-loja").textContent="Editar Loja";document.getElementById("loja-eid").value=l.id||"";document.getElementById("loja-nome").value=l.nome||"";document.getElementById("loja-end").value=l.endereco||"";document.getElementById("loja-lat").value=l.lat||"";document.getElementById("loja-lng").value=l.lng||"";document.getElementById("loja-wpp").value=l.whatsapp||"";document.getElementById("loja-resp").value=l.responsavel||"";renderAuditoresNaLoja(l.id);openM("m-loja");}
+async function saveLoja(){var nome=document.getElementById("loja-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var l={id:document.getElementById("loja-eid").value||String(Date.now()),nome:nome,endereco:document.getElementById("loja-end").value,lat:parseFloat(document.getElementById("loja-lat").value)||null,lng:parseFloat(document.getElementById("loja-lng").value)||null,whatsapp:document.getElementById("loja-wpp").value,responsavel:document.getElementById("loja-resp").value};var idx=db.lojas.findIndex(function(x){return x.id==l.id;});if(idx>=0)db.lojas[idx]=l;else db.lojas.push(l);cacheDB();btnLoading("#m-loja .btnp",true);await apiPost({action:"saveLoja",loja:l});btnLoading("#m-loja .btnp",false,"Salvar");closeM("m-loja");rLojas();updDash();["loja-eid","loja-nome","loja-end","loja-lat","loja-lng","loja-wpp","loja-resp"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("mt-loja").textContent="Nova Loja";showT("✅ Loja salva!");}
 async function delLoja(i){if(!confirm("Excluir esta loja?"))return;var l=db.lojas[i];db.lojas.splice(i,1);cacheDB();await apiPost({action:"deleteLoja",id:l.id});rLojas();updDash();showT("🗑️ Loja excluída");}
 
 // ============================================================
 // AUDITORES — CRUD
 // ============================================================
-function genPIN(){var p=Math.floor(100000+Math.random()*900000).toString();document.getElementById("aud-pin").value=p;document.getElementById("aud-pin-show").textContent=p;}
-function abrirNovoAud(){document.getElementById("mt-aud").textContent="Novo Auditor";document.getElementById("aud-eid").value="";document.getElementById("aud-nome").value="";renderCargosSelect("auditor");genPIN();openM("m-aud");}
-function editAud(i){var a=db.auditores[i];document.getElementById("mt-aud").textContent="Editar Auditor";document.getElementById("aud-eid").value=a.id||"";document.getElementById("aud-nome").value=a.nome||"";document.getElementById("aud-pin").value=a.pin||"";document.getElementById("aud-pin-show").textContent=a.pin||"——";renderCargosSelect(a.cargo||"auditor");openM("m-aud");}
-function resetPIN(i){var a=db.auditores[i];var np=Math.floor(100000+Math.random()*900000).toString();document.getElementById("pin-reset-content").innerHTML="<p style='margin-bottom:16px;font-size:14px;color:var(--g600)'>Novo PIN para <strong>"+esc(a.nome)+"</strong>:</p><div class='pin-show' style='font-size:32px;letter-spacing:8px;text-align:center;margin-bottom:16px'>"+np+"</div><p style='font-size:13px;color:var(--g400);margin-bottom:20px'>Anote e entregue ao auditor.</p><div class='brow'><button class='btn btns' onclick='closeM(\"m-pin-reset\")'>Cancelar</button><button class='btn btnp' style='flex:1' onclick='confirmResetPIN("+i+",\""+np+"\")'>✅ Confirmar</button></div>";openM("m-pin-reset");}
+function genPIN(){
+  // Gera PIN único — verifica se já existe em db.auditores
+  var p, tentativas=0, maxTentativas=20;
+  do {
+    p=Math.floor(100000+Math.random()*900000).toString();
+    tentativas++;
+  } while(
+    tentativas < maxTentativas &&
+    db.auditores.some(function(a){
+      // Ignora o próprio auditor sendo editado
+      var editId=document.getElementById("aud-eid").value;
+      return String(a.pin)===p && String(a.id)!==editId;
+    })
+  );
+  document.getElementById("aud-pin").value=p;
+  document.getElementById("aud-pin-show").textContent=p;
+}
+function abrirNovoAud(){
+  document.getElementById("mt-aud").textContent="Novo Auditor";
+  document.getElementById("aud-eid").value="";
+  document.getElementById("aud-nome").value="";
+  renderCargosSelect("auditor");
+  genPIN();
+  var chk=document.getElementById("aud-acesso-total");
+  if(chk){chk.checked=true;document.getElementById("aud-lojas-wrap").style.display="none";}
+  openM("m-aud");
+}
+function editAud(i){
+  var a=db.auditores[i];
+  document.getElementById("mt-aud").textContent="Editar Auditor";
+  document.getElementById("aud-eid").value=a.id||"";
+  document.getElementById("aud-nome").value=a.nome||"";
+  document.getElementById("aud-pin").value=a.pin||"";
+  document.getElementById("aud-pin-show").textContent=a.pin||"——";
+  renderCargosSelect(a.cargo||"auditor");
+  var acessoTotal=a.acessoTotal!==false;
+  var chk=document.getElementById("aud-acesso-total");
+  var wrap=document.getElementById("aud-lojas-wrap");
+  if(chk)chk.checked=acessoTotal;
+  if(wrap)wrap.style.display=acessoTotal?"none":"block";
+  if(!acessoTotal)renderLojasChecks(a.lojasPermitidas||[]);
+  openM("m-aud");
+}
+function resetPIN(i){var a=db.auditores[i];var np, t=0;
+  do { np=Math.floor(100000+Math.random()*900000).toString(); t++; }
+  while(t<20 && db.auditores.some(function(x){return String(x.pin)===np&&x.id!=db.auditores[i].id;}));
+document.getElementById("pin-reset-content").innerHTML="<p style='margin-bottom:16px;font-size:14px;color:var(--g600)'>Novo PIN para <strong>"+esc(a.nome)+"</strong>:</p><div class='pin-show' style='font-size:32px;letter-spacing:8px;text-align:center;margin-bottom:16px'>"+np+"</div><p style='font-size:13px;color:var(--g400);margin-bottom:20px'>Anote e entregue ao auditor.</p><div class='brow'><button class='btn btns' onclick='closeM(\"m-pin-reset\")'>Cancelar</button><button class='btn btnp' style='flex:1' onclick='confirmResetPIN("+i+",\""+np+"\")'>✅ Confirmar</button></div>";openM("m-pin-reset");}
 async function confirmResetPIN(i,np){db.auditores[i].pin=np;cacheDB();await apiPost({action:"saveAuditor",auditor:db.auditores[i]});closeM("m-pin-reset");rAuds();showT("🔐 PIN resetado!");}
-async function saveAud(){var nome=document.getElementById("aud-nome").value.trim();var pin=document.getElementById("aud-pin").value.trim();if(!nome){showT("Nome é obrigatório");return;}if(!pin){showT("Gere um PIN primeiro");return;}var a={id:document.getElementById("aud-eid").value||String(Date.now()),nome:nome,pin:pin,cargo:document.getElementById("aud-cargo").value};var idx=db.auditores.findIndex(function(x){return x.id==a.id;});if(idx>=0)db.auditores[idx]=a;else db.auditores.push(a);cacheDB();await apiPost({action:"saveAuditor",auditor:a});closeM("m-aud");rAuds();updDash();showT("✅ Auditor salvo! PIN: "+pin);}
+async function saveAud(){var nome=document.getElementById("aud-nome").value.trim();var pin=document.getElementById("aud-pin").value.trim();if(!nome){showT("Nome é obrigatório");return;}if(!pin){showT("Gere um PIN primeiro");return;}
+  // Verifica duplicata de PIN (ignora o próprio auditor em edição)
+  var editId=document.getElementById("aud-eid").value;
+  var pinDup=db.auditores.find(function(x){return String(x.pin)===String(pin)&&String(x.id)!==editId;});
+  if(pinDup){showT("⚠️ PIN já usado por "+pinDup.nome+" — gere um novo");return;}var acessoTotalChk=document.getElementById("aud-acesso-total");
+  var acessoTotal=!acessoTotalChk||acessoTotalChk.checked;
+  var lojasPermitidas=[];
+  if(!acessoTotal){
+    lojasPermitidas=Array.from(document.querySelectorAll("#aud-lojas-checks input:checked")).map(function(el){return el.value;});
+  }
+  var a={id:document.getElementById("aud-eid").value||String(Date.now()),nome:nome,pin:pin,cargo:document.getElementById("aud-cargo").value,acessoTotal:acessoTotal,lojasPermitidas:lojasPermitidas};var idx=db.auditores.findIndex(function(x){return x.id==a.id;});if(idx>=0)db.auditores[idx]=a;else db.auditores.push(a);cacheDB();btnLoading("#m-aud .btnp",true);await apiPost({action:"saveAuditor",auditor:a});btnLoading("#m-aud .btnp",false,"Salvar");closeM("m-aud");rAuds();updDash();showT("✅ Auditor salvo! PIN: "+pin);}
 async function delAud(i){if(!confirm("Excluir este auditor?"))return;var a=db.auditores[i];db.auditores.splice(i,1);cacheDB();await apiPost({action:"deleteAuditor",id:a.id});rAuds();updDash();showT("🗑️ Auditor excluído");}
 
 // ============================================================
 // CATEGORIAS — CRUD
 // ============================================================
 function editCat(i){var c=db.categorias[i];document.getElementById("mt-cat").textContent="Editar Categoria";document.getElementById("cat-eid").value=c.id||"";document.getElementById("cat-nome").value=c.nome||"";document.getElementById("cat-emoji").value=c.emoji||"";document.getElementById("emoji-display").textContent=c.emoji||"📂";document.getElementById("cat-peso").value=c.peso||"";openM("m-cat");}
-async function saveCat(){var nome=document.getElementById("cat-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var c={id:document.getElementById("cat-eid").value||String(Date.now()),nome:nome,emoji:document.getElementById("cat-emoji").value||"📂",peso:parseInt(document.getElementById("cat-peso").value)||10};var idx=db.categorias.findIndex(function(x){return x.id==c.id;});if(idx>=0)db.categorias[idx]=c;else db.categorias.push(c);cacheDB();await apiPost({action:"saveCategoria",categoria:c});closeM("m-cat");rCats();["cat-eid","cat-nome","cat-emoji","cat-peso"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("emoji-display").textContent="📂";document.getElementById("mt-cat").textContent="Nova Categoria";showT("✅ Categoria salva!");}
+async function saveCat(){var nome=document.getElementById("cat-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var c={id:document.getElementById("cat-eid").value||String(Date.now()),nome:nome,emoji:document.getElementById("cat-emoji").value||"📂",peso:parseInt(document.getElementById("cat-peso").value)||10};var idx=db.categorias.findIndex(function(x){return x.id==c.id;});if(idx>=0)db.categorias[idx]=c;else db.categorias.push(c);cacheDB();btnLoading("#m-cat .btnp",true);await apiPost({action:"saveCategoria",categoria:c});btnLoading("#m-cat .btnp",false,"Salvar");closeM("m-cat");rCats();["cat-eid","cat-nome","cat-emoji","cat-peso"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("emoji-display").textContent="📂";document.getElementById("mt-cat").textContent="Nova Categoria";showT("✅ Categoria salva!");}
 async function delCat(i){if(!confirm("Excluir esta categoria?"))return;var c=db.categorias[i];db.categorias.splice(i,1);cacheDB();await apiPost({action:"deleteCategoria",id:c.id});rCats();showT("🗑️ Categoria excluída");}
 
 // ============================================================
@@ -671,7 +924,7 @@ function addItem(item){item=item||{};var div=document.createElement("div");div.s
 function getItems(){return Array.from(document.querySelectorAll("#items-ed > div")).map(function(c){return {pergunta:c.querySelector("[data-f='p']").value.trim(),categoriaId:c.querySelector("[data-f='c']").value,peso:parseInt(c.querySelector("[data-f='w']").value)||1,fotoObrig:c.querySelector("[data-f='fotoObrig']").checked};}).filter(function(i){return i.pergunta;});}
 function abrirNovoCL(){document.getElementById("mt-cl").textContent="Novo Checklist";document.getElementById("cl-eid").value="";document.getElementById("cl-nome").value="";document.getElementById("cl-desc").value="";document.getElementById("items-ed").innerHTML="";renderCargosCheckboxes([]);openM("m-cl");}
 function editCL(i){var c=db.checklists[i];document.getElementById("mt-cl").textContent="Editar Checklist";document.getElementById("cl-eid").value=c.id||"";document.getElementById("cl-nome").value=c.nome||"";document.getElementById("cl-desc").value=c.descricao||"";document.getElementById("items-ed").innerHTML="";(c.items||[]).forEach(function(it){addItem(it);});renderCargosCheckboxes(c.cargosPermitidos||[]);openM("m-cl");}
-async function saveCL(){var nome=document.getElementById("cl-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var cargos=Array.from(document.querySelectorAll("#cl-cargos-list input:checked")).map(function(el){return el.value;});var cl={id:document.getElementById("cl-eid").value||String(Date.now()),nome:nome,descricao:document.getElementById("cl-desc").value,cargosPermitidos:cargos,items:getItems()};var idx=db.checklists.findIndex(function(x){return x.id==cl.id;});if(idx>=0)db.checklists[idx]=cl;else db.checklists.push(cl);cacheDB();await apiPost({action:"saveChecklist",checklist:cl});closeM("m-cl");rCLs();updDash();showT("✅ Checklist salvo!");}
+async function saveCL(){var nome=document.getElementById("cl-nome").value.trim();if(!nome){showT("Nome é obrigatório");return;}var cargos=Array.from(document.querySelectorAll("#cl-cargos-list input:checked")).map(function(el){return el.value;});var cl={id:document.getElementById("cl-eid").value||String(Date.now()),nome:nome,descricao:document.getElementById("cl-desc").value,cargosPermitidos:cargos,items:getItems()};var idx=db.checklists.findIndex(function(x){return x.id==cl.id;});if(idx>=0)db.checklists[idx]=cl;else db.checklists.push(cl);cacheDB();btnLoading("#m-cl .btnp",true);await apiPost({action:"saveChecklist",checklist:cl});btnLoading("#m-cl .btnp",false,"Salvar");closeM("m-cl");rCLs();updDash();showT("✅ Checklist salvo!");}
 async function delCL(i){if(!confirm("Excluir este checklist?"))return;var c=db.checklists[i];db.checklists.splice(i,1);cacheDB();await apiPost({action:"deleteChecklist",id:c.id});rCLs();updDash();showT("🗑️ Checklist excluído");}
 
 // ============================================================
@@ -679,7 +932,7 @@ async function delCL(i){if(!confirm("Excluir este checklist?"))return;var c=db.c
 // ============================================================
 function haversine(lat1,lon1,lat2,lon2){var R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 function renderGeoArea(status,dist){var el=document.getElementById("geo-area");if(status==="loading")el.innerHTML="<div class='geo-card loading'><div class='geo-icon'>📡</div><div class='geo-title'>Verificando localização...</div></div>";else if(status==="ok")el.innerHTML="<div class='geo-card ok'><div class='geo-icon'>✅</div><div class='geo-title'>Check-in realizado!</div><div class='geo-dist'>"+Math.round(dist)+"m</div><div class='geo-sub'>Dentro do raio de 300m</div></div>";else if(status==="err-dist")el.innerHTML="<div class='geo-card err'><div class='geo-icon'>🚫</div><div class='geo-title'>Fora do endereço</div><div class='geo-dist' style='color:var(--rd)'>"+Math.round(dist)+"m</div><div class='geo-sub'>Máximo permitido: 300m</div></div>";else if(status==="err-geo")el.innerHTML="<div class='geo-card err'><div class='geo-icon'>❌</div><div class='geo-title'>Localização indisponível</div><div class='geo-sub'>Permita o acesso à localização</div></div>";else if(status==="no-coord")el.innerHTML="<div class='geo-card warn'><div class='geo-icon'>⚠️</div><div class='geo-title'>Sem coordenadas</div><div class='geo-sub'>Cadastre lat/lng na loja para habilitar check-in</div></div>";}
-async function checkGeo(loja){if(!loja.lat||!loja.lng){geoStatus="no-coord";geoOk=true;renderGeoArea("no-coord");return;}if(!navigator.geolocation){geoStatus="err-geo";geoOk=false;renderGeoArea("err-geo");return;}geoStatus="loading";renderGeoArea("loading");return new Promise(function(resolve){navigator.geolocation.getCurrentPosition(function(pos){var dist=haversine(pos.coords.latitude,pos.coords.longitude,loja.lat,loja.lng);geoData={lat:pos.coords.latitude,lng:pos.coords.longitude,dist:dist};if(dist<=300){geoStatus="ok";geoOk=true;renderGeoArea("ok",dist);}else{geoStatus="err-dist";geoOk=false;renderGeoArea("err-dist",dist);}resolve();},function(){geoStatus="err-geo";geoOk=false;renderGeoArea("err-geo");resolve();},{enableHighAccuracy:true,timeout:10000});});}
+async function checkGeo(loja){if(!loja.lat||!loja.lng){geoStatus="no-coord";geoOk=true;renderGeoArea("no-coord");return;}if(!navigator.geolocation){geoStatus="err-geo";geoOk=false;renderGeoArea("err-geo");return;}geoStatus="loading";renderGeoArea("loading");return new Promise(function(resolve){navigator.geolocation.getCurrentPosition(function(pos){var dist=haversine(pos.coords.latitude,pos.coords.longitude,loja.lat,loja.lng);geoData={lat:pos.coords.latitude,lng:pos.coords.longitude,dist:dist};if(dist<=1000){geoStatus="ok";geoOk=true;renderGeoArea("ok",dist);}else{geoStatus="err-dist";geoOk=false;renderGeoArea("err-dist",dist);}resolve();},function(){geoStatus="err-geo";geoOk=false;renderGeoArea("err-geo");resolve();},{enableHighAccuracy:true,timeout:10000});});}
 
 // ============================================================
 // EXECUÇÃO — SETUP
@@ -687,25 +940,26 @@ async function checkGeo(loja){if(!loja.lat||!loja.lng){geoStatus="no-coord";geoO
 function onLojaChange(){geoStatus="idle";geoData=null;geoOk=false;document.getElementById("geo-area").innerHTML="";}
 function popExec(){
   var lEl=document.getElementById("ex-loja"),cEl=document.getElementById("ex-cl");
-  lEl.innerHTML="<option value=''>Selecione a loja...</option>"+db.lojas.map(function(l){return "<option value='"+l.id+"'>"+esc(l.nome)+"</option>";}).join("");
+  // Filtra lojas pelo acesso do auditor
+  var cargo2=String(user&&user.cargo||"").toLowerCase();
+  var lojasVis=db.lojas.filter(function(l){
+    if(cargo2==="admin")return true;
+    if(user.acessoTotal!==false)return true;
+    return (user.lojasPermitidas||[]).some(function(id){return String(id)===String(l.id);});
+  });
+  lEl.innerHTML="<option value=''>Selecione a loja...</option>"+lojasVis.map(function(l){return "<option value='"+l.id+"'>"+esc(l.nome)+"</option>";}).join("");
   // Filtra checklists pelo cargo do usuário (regra de negócio)
   var cargo=String(user&&user.cargo||"").toLowerCase();
   var clsVis=db.checklists.filter(function(cl){
     var perm=cl.cargosPermitidos||[];
-    if(!perm.length)return true;          // sem restrição = todos
-    if(cargo==="admin")return true;       // admin vê tudo
-    // Monta lista de identificadores do usuário para comparar
-    // Inclui: cargo atual, id do usuário, e o id do cargo na tabela cargos
+    if(!perm.length)return true;
+    if(cargo==="admin")return true;
     var userIds=[String(user.cargo||""), String(user.id||"")];
-    // Busca o cargo do usuário na tabela de cargos pelo nome ou id
     var cargoObj=db.cargos.find(function(c){
       return String(c.id)===String(user.cargo)||String(c.nome).toLowerCase()===cargo;
     });
     if(cargoObj) userIds.push(String(cargoObj.id));
-    // Verifica se algum dos identificadores do usuário está na lista de permissões
-    return perm.some(function(p){
-      return userIds.indexOf(String(p))>=0;
-    });
+    return perm.some(function(p){return userIds.indexOf(String(p))>=0;});
   });
   cEl.innerHTML="<option value=''>Selecione o checklist...</option>"+clsVis.map(function(c){return "<option value='"+c.id+"'>"+esc(c.nome)+" ("+(c.items||[]).length+" itens)</option>";}).join("");
   geoStatus="idle";geoOk=false;document.getElementById("geo-area").innerHTML="";
@@ -788,7 +1042,7 @@ function renderWizard(cl,loja){
       html+="<div class='card' style='padding:14px;margin-bottom:10px'>";
       html+="<label class='flb' style='margin-bottom:6px'>✍️ Assinatura do Auditor</label>";
       html+="<p style='font-size:12px;color:var(--g400);margin-bottom:10px'>Assine com o dedo ou mouse — obrigatória</p>";
-      html+="<canvas id='wiz-sigc-aud' height='130' style='border:2px solid "+(audSigned?"var(--gn)":"var(--g200)")+";border-radius:12px;width:100%;display:block;touch-action:none;cursor:crosshair;background:#FAFAFA'></canvas>";
+      html+="<canvas id='wiz-sigc-aud' width='800' height='200' style='border:2px solid "+(audSigned?"var(--gn)":"var(--g200)")+";border-radius:12px;max-width:100%;width:100%;display:block;touch-action:none;cursor:crosshair;background:#FAFAFA'></canvas>";
       html+="<div style='display:flex;gap:8px;margin-top:8px'>";
       html+="<button class='btn btns btnsm' onclick='clearWizSig(\"aud\")'>🗑️ Limpar</button>";
       html+=""+(audSigned?"<span style='color:var(--gn);font-size:13px;font-weight:700;align-self:center'>✅ Assinado</span>":"");
@@ -804,7 +1058,7 @@ function renderWizard(cl,loja){
         html+="<input type='text' class='finput' id='wiz-acomp' placeholder='Nome de quem acompanhou' value='"+esc(curAud.acompanhante||"")+"' oninput='curAud.acompanhante=this.value' style='margin-bottom:12px'>";
         html+="<label class='flb' style='margin-bottom:6px'>✍️ Assinatura do Acompanhante</label>";
         html+="<p style='font-size:12px;color:var(--g400);margin-bottom:10px'>Opcional</p>";
-        html+="<canvas id='wiz-sigc-loja' height='130' style='border:2px solid "+(curAud.sig_loja?"var(--gn)":"var(--g200)")+";border-radius:12px;width:100%;display:block;touch-action:none;cursor:crosshair;background:#FAFAFA'></canvas>";
+        html+="<canvas id='wiz-sigc-loja' width='800' height='200' style='border:2px solid "+(curAud.sig_loja?"var(--gn)":"var(--g200)")+";border-radius:12px;max-width:100%;width:100%;display:block;touch-action:none;cursor:crosshair;background:#FAFAFA'></canvas>";
         html+="<div style='display:flex;gap:8px;margin-top:8px'>";
         html+="<button class='btn btns btnsm' onclick='clearWizSig(\"loja\")'>🗑️ Limpar</button>";
         html+=""+(curAud.sig_loja?"<span style='color:var(--gn);font-size:13px;font-weight:700;align-self:center'>✅ Assinado</span>":"");
@@ -875,10 +1129,10 @@ function _setupCanvases(){
   ['aud','loja'].forEach(function(tipo){
     var c=document.getElementById('wiz-sigc-'+tipo);
     if(!c) return;
-    // Força largura real: offsetWidth é confiável após 2 rAFs
-    var W=c.offsetWidth||c.parentElement&&c.parentElement.offsetWidth||320;
-    var H=parseInt(c.getAttribute('height'))||130;
-    c.width=W; c.height=H;
+    // Canvas já tem width/height fixos no atributo HTML (800x200)
+    // Não precisamos medir o DOM — apenas pegar os valores do elemento
+    var W=c.width||800;
+    var H=c.height||200;
     var ctx=c.getContext('2d');
     ctx.strokeStyle='#1A1A1A'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round';
     // Restaura assinatura salva se existir
@@ -888,11 +1142,13 @@ function _setupCanvases(){
       img.src=curAud['sig_'+tipo];
     }
     var drawing=false;
-    // Coordenadas precisas: escala CSS vs coordenadas internas do canvas
+    // Coordenadas: converte posição visual para coordenadas internas do canvas
+    // Canvas interno: 800x200px. Visual: ~100% da largura do card.
+    // A escala é calculada em tempo real para funcionar em qualquer tela.
     function getXY(clientX, clientY){
       var r=c.getBoundingClientRect();
-      var scaleX=c.width/r.width;
-      var scaleY=c.height/r.height;
+      var scaleX=800/r.width;
+      var scaleY=200/r.height;
       return {x:(clientX-r.left)*scaleX, y:(clientY-r.top)*scaleY};
     }
     // Mouse events
@@ -1086,9 +1342,28 @@ function cancelAud(){
 }
 
 /* Finaliza e salva auditoria */
+/* Mostra overlay de carregamento ao finalizar */
+function showFinLoading(){
+  var el=document.createElement("div");
+  el.id="fin-overlay"; el.className="fin-overlay";
+  el.innerHTML="<div class='fin-overlay-icon'>📋</div>"+
+    "<div class='fin-overlay-title'>Salvando auditoria...</div>"+
+    "<div class='fin-overlay-sub'>Aguarde um momento</div>"+
+    "<div class='fin-progress-bar'><div class='fin-progress-fill'></div></div>";
+  document.body.appendChild(el);
+}
+function hideFinLoading(){
+  var el=document.getElementById("fin-overlay");
+  if(el) el.remove();
+}
+
 async function finAud(){
   // Valida assinaturas e nome do acompanhante antes de qualquer coisa
   if(!validarAssinaturas()) return;
+  // Mostra loading imediatamente após validação
+  showFinLoading();
+  // Pequeno delay para o browser renderizar o overlay antes de processar
+  await new Promise(function(r){setTimeout(r,80);});
   var items=curAud.checklist.items||[];
   var fotosPend=[];items.forEach(function(item,idx){
     // Foto obrigatória se item respondido (qualquer resposta exceto N/A) e sem foto
@@ -1121,11 +1396,15 @@ async function finAud(){
   items.forEach(function(item,idx){var r=curAud.respostas[idx],w=item.peso||1;if(r==="cf"){scoreW+=w;totalW+=w;}else if(r==="nc"){totalW+=w;}});
   var score=totalW?(scoreW/totalW*100):0;curAud.score=score;curAud.data=new Date().toISOString();
   var aud={id:String(Date.now()),lojaId:curAud.loja.id,checklistId:curAud.checklist.id,auditor:user.nome,data:curAud.data,score:score,respostas:curAud.respostas,obs:curAud.obs,fotos:curAud.fotos,geoLat:curAud.geoLat,geoLng:curAud.geoLng,acompanhante:curAud.acompanhante||'',sigAud:curAud.sig_aud||'',sigLoja:curAud.sig_loja||''};
-  db.auditorias.push(aud);cacheDB();await apiPost({action:"saveAuditoria",auditoria:aud});showRes(score);
+  db.auditorias.push(aud);cacheDB();
+  // Salva assinaturas no localStorage indexadas pelo ID da auditoria
+  salvarAssinaturasLocal(aud.id, curAud.sig_aud||null, curAud.sig_loja||null);
+  await apiPost({action:"saveAuditoria",auditoria:aud});showRes(score);
 }
 
 /* Tela de resultado pós-auditoria */
 function showRes(score){
+  hideFinLoading();
   var cf=0,nc=0,na=0;Object.values(curAud.respostas).forEach(function(r){if(r==="cf")cf++;else if(r==="nc")nc++;else na++;});
   var col=score>=80?"var(--gn)":score>=60?"var(--ye)":"var(--rd)";var sts=score>=80?"✅ Aprovado":score>=60?"⚠️ Atenção":"❌ Crítico";var cls=score>=80?"bgn":score>=60?"bye":"brd";
   document.getElementById("res-content").innerHTML=
@@ -1144,9 +1423,124 @@ function showRes(score){
 }
 
 // ============================================================
+// ASSINATURAS NO LOCALSTORAGE
+// ============================================================
+
+var SIG_KEY = "ll_sigs"; // chave no localStorage
+var SIG_MAX = 50;        // máximo de auditorias com assinaturas salvas
+
+/* Salva assinaturas de uma auditoria no localStorage */
+function salvarAssinaturasLocal(audId, sigAud, sigLoja){
+  try {
+    var store = JSON.parse(localStorage.getItem(SIG_KEY)||"{}");
+    store[audId] = {sigAud: sigAud||null, sigLoja: sigLoja||null, ts: Date.now()};
+    // Mantém só as últimas SIG_MAX — remove as mais antigas
+    var ids = Object.keys(store).sort(function(a,b){ return store[a].ts - store[b].ts; });
+    while(ids.length > SIG_MAX){
+      delete store[ids.shift()];
+    }
+    localStorage.setItem(SIG_KEY, JSON.stringify(store));
+  } catch(e){ console.warn("Erro ao salvar assinatura local:", e); }
+}
+
+/* Recupera assinaturas de uma auditoria do localStorage */
+function buscarAssinaturasLocal(audId){
+  try {
+    var store = JSON.parse(localStorage.getItem(SIG_KEY)||"{}");
+    return store[audId] || {sigAud:null, sigLoja:null};
+  } catch(e){ return {sigAud:null, sigLoja:null}; }
+}
+
+// ============================================================
+// MODAL AVISO PDF
+// ============================================================
+
+var _pdfAudId  = null;   // ID da auditoria pendente
+var _pdfModo   = "hist"; // "hist" = histórico | "atual" = auditoria recém-finalizada
+var PDF_PREF_KEY = "ll_pdf_viu_aviso"; // localStorage key
+
+/* Verifica se usuário já viu o aviso antes */
+function jaViuAvisoPDF(){
+  return localStorage.getItem(PDF_PREF_KEY) === "1";
+}
+
+/* Abre o modal correto antes de gerar PDF */
+function abrirAvisoPDF(audId){
+  _pdfAudId = audId;
+  _pdfModo  = "hist";
+  _abrirModalCorreto();
+}
+
+/* Chamado ao clicar WhatsApp+PDF na auditoria recém-finalizada */
+function abrirAvisoPDFAtual(){
+  _pdfAudId = null; // será gerado via envWppReal()
+  _pdfModo  = "atual";
+  _abrirModalCorreto();
+}
+
+function _abrirModalCorreto(){
+  if(jaViuAvisoPDF()){
+    // Modal simplificado
+    document.getElementById("pdf-aviso-simples").classList.add("open");
+  } else {
+    // Modal completo — reseta checkboxes
+    var chk  = document.getElementById("pdf-aviso-chk");
+    var chk2 = document.getElementById("pdf-aviso-nao-mostrar");
+    var btn  = document.getElementById("pdf-aviso-btn");
+    if(chk)  chk.checked  = false;
+    if(chk2) chk2.checked = false;
+    if(btn)  btn.classList.remove("ok");
+    document.getElementById("pdf-aviso-overlay").classList.add("open");
+  }
+}
+
+/* Libera botão só quando "li e estou ciente" estiver marcado */
+function togglePdfBtn(){
+  var chk  = document.getElementById("pdf-aviso-chk");
+  var btn  = document.getElementById("pdf-aviso-btn");
+  if(chk && btn) btn.classList.toggle("ok", chk.checked);
+}
+
+/* Fecha ambos os modais */
+function fecharAvisoPDF(){
+  document.getElementById("pdf-aviso-overlay").classList.remove("open");
+  document.getElementById("pdf-aviso-simples").classList.remove("open");
+}
+
+/* Cancelar: zera o ID pendente */
+function cancelarAvisoPDF(){
+  _pdfAudId = null;
+  fecharAvisoPDF();
+}
+
+/* Gera o PDF após confirmação */
+async function confirmarGerarPDF(){
+  // Salva preferência "não mostrar" se marcado
+  var chk2 = document.getElementById("pdf-aviso-nao-mostrar");
+  if(chk2 && chk2.checked){
+    localStorage.setItem(PDF_PREF_KEY, "1");
+  }
+  // Guarda valores ANTES de fechar (fecharAvisoPDF zera _pdfAudId)
+  var audIdLocal = _pdfAudId;
+  var modoLocal  = _pdfModo;
+  fecharAvisoPDF();
+  if(modoLocal === "atual"){
+    await envWppReal();
+  } else {
+    await gerarPDFFromAuditoria(audIdLocal);
+  }
+}
+
+// ============================================================
 // WHATSAPP + PDF
 // ============================================================
+/* envWpp: abre o modal de aviso antes de gerar PDF+WhatsApp */
 async function envWpp(){
+  abrirAvisoPDFAtual();
+}
+
+/* envWppReal: executa o envio após confirmação do modal */
+async function envWppReal(){
   var loja=curAud.loja,cl=curAud.checklist,score=curAud.score;
   var st=score>=80?"✅ APROVADO":score>=60?"⚠️ ATENÇÃO":"❌ CRÍTICO";
   var ncItems=(cl.items||[]).filter(function(_,idx){return curAud.respostas[idx]==="nc";});
@@ -1159,16 +1553,28 @@ async function envWpp(){
   else showT("⚠️ WhatsApp não cadastrado. PDF baixado!");
   closeM("m-res");cancelAud();updDash();
 }
-async function gerarPDFFromAuditoria(audId){var a=db.auditorias.find(function(x){return x.id==audId;});if(!a)return;var loja=db.lojas.find(function(l){return l.id==a.lojaId;})||{nome:a.lojaId};var cl=db.checklists.find(function(c){return c.id==a.checklistId;})||{nome:a.checklistId,items:[]};await gerarPDF(loja,cl,a.score,a.respostas||{},a.obs||{},a.fotos||{},a.auditor,a.data,a.acompanhante||"",a.sigAud||null,a.sigLoja||null);}
+async function gerarPDFFromAuditoria(audId){
+  var a=db.auditorias.find(function(x){return x.id==audId;});
+  if(!a) return;
+  var loja=db.lojas.find(function(l){return l.id==a.lojaId;})||{nome:a.lojaId};
+  var cl=db.checklists.find(function(c){return c.id==a.checklistId;})||{nome:a.checklistId,items:[]};
+  // Busca assinaturas do localStorage (salvas no dispositivo da auditoria)
+  var sigs=buscarAssinaturasLocal(audId);
+  var sigAud=sigs.sigAud||null;
+  var sigLoja=sigs.sigLoja||null;
+  await gerarPDF(loja,cl,a.score,a.respostas||{},a.obs||{},a.fotos||{},
+    a.auditor,a.data,a.acompanhante||"",sigAud,sigLoja);
+}
 async function gerarPDF(loja,cl,score,respostas,obs,fotos,auditorNome,data,acompNome,sigAudData,sigLojaData){
+  try{
   var jspdf=window.jspdf;if(!jspdf){showT("PDF indisponível");return;}
   var doc=new jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
   var stc=score>=80?[34,197,94]:score>=60?[234,179,8]:[239,68,68],stl=score>=80?"APROVADO":score>=60?"ATENCAO":"CRITICO",y=0;
   doc.setFillColor(232,82,10);doc.rect(0,0,210,45,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(22);doc.text("LANLAN AUDITORIA",105,18,{align:"center"});doc.setFontSize(11);doc.setFont("helvetica","normal");doc.text("Relatorio de Auditoria de Qualidade",105,26,{align:"center"});doc.setFillColor(stc[0],stc[1],stc[2]);doc.roundedRect(70,31,70,12,3,3,"F");doc.setFont("helvetica","bold");doc.setFontSize(13);doc.text((score||0).toFixed(0)+"% - "+stl,105,39,{align:"center"});y=55;
   doc.setFillColor(255,248,243);doc.roundedRect(10,y,190,36,3,3,"F");doc.setDrawColor(232,82,10);doc.roundedRect(10,y,190,36,3,3,"S");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text("Loja: "+loja.nome,15,y+8);doc.text("Checklist: "+(cl.nome||""),15,y+16);doc.text("Auditor: "+(auditorNome||""),15,y+24);
-  if(acompNome) doc.text("Acompanhou: "+acompNome.substring(0,35),15,y+32);doc.text("Data: "+new Date(data||Date.now()).toLocaleDateString("pt-BR"),110,y+8);if(loja.endereco)doc.text((loja.endereco||"").substring(0,35),110,y+16);y+=44;
+  if(acompNome&&acompNome.length) doc.text("Acompanhou: "+(acompNome||"").substring(0,35),15,y+32);doc.text("Data: "+new Date(data||Date.now()).toLocaleDateString("pt-BR"),110,y+8);if(loja.endereco)doc.text((loja.endereco||"").substring(0,35),110,y+16);y+=44;
   var cats={};(cl.items||[]).forEach(function(item,idx){var cat=db.categorias.find(function(c){return c.id==item.categoriaId;});var cn=cat?((cat.emoji||"")+" "+cat.nome):"Geral";if(!cats[cn])cats[cn]=[];cats[cn].push({item:item,idx:idx});});
-  Object.keys(cats).forEach(function(cn){if(y>250){doc.addPage();y=15;}doc.setFillColor(232,82,10);doc.roundedRect(10,y,190,8,2,2,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(cn.replace(/[\u{1F000}-\u{1FFFF}]/gu,"").trim()||cn,14,y+5.5);y+=12;cats[cn].forEach(function(entry){if(y>260){doc.addPage();y=15;}var item=entry.item,idx=entry.idx,r=respostas[idx],ob=obs[idx]||"";var bc=r==="cf"?[240,253,244]:r==="nc"?[254,242,242]:[245,237,228],dc=r==="cf"?[34,197,94]:r==="nc"?[239,68,68]:[186,156,136],h=ob?14:10;doc.setFillColor(bc[0],bc[1],bc[2]);doc.roundedRect(10,y,190,h,2,2,"F");doc.setFillColor(dc[0],dc[1],dc[2]);doc.circle(17,y+5,2.5,"F");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(9);var pq=item.pergunta.length>62?item.pergunta.substring(0,59)+"...":item.pergunta;doc.text(pq,22,y+5.5);var rl=r==="cf"?"CONFORME":r==="nc"?"NAO CONFORME":r==="na"?"N/A":"—";doc.setFont("helvetica","bold");doc.setTextColor(dc[0],dc[1],dc[2]);doc.text(rl,198,y+5.5,{align:"right"});if(ob){doc.setTextColor(122,92,74);doc.setFont("helvetica","italic");doc.setFontSize(8);doc.text("Obs: "+ob.substring(0,70),22,y+11);}y+=h+2;if(fotos[idx]&&fotos[idx].length){fotos[idx].forEach(function(fd){if(y>215){doc.addPage();y=15;}try{doc.addImage(fd,"JPEG",14,y,55,44);}catch(e){}y+=48;});}});y+=4;});
+  Object.keys(cats).forEach(function(cn){if(y>250){doc.addPage();y=15;}doc.setFillColor(232,82,10);doc.roundedRect(10,y,190,8,2,2,"F");doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(cn.replace(/[\u{1F000}-\u{1FFFF}]/gu,"").trim()||cn,14,y+5.5);y+=12;cats[cn].forEach(function(entry){if(y>260){doc.addPage();y=15;}var item=entry.item,idx=entry.idx,r=respostas[idx],ob=obs[idx]||"";var bc=r==="cf"?[240,253,244]:r==="nc"?[254,242,242]:[245,237,228],dc=r==="cf"?[34,197,94]:r==="nc"?[239,68,68]:[186,156,136],h=ob?14:10;doc.setFillColor(bc[0],bc[1],bc[2]);doc.roundedRect(10,y,190,h,2,2,"F");doc.setFillColor(dc[0],dc[1],dc[2]);doc.circle(17,y+5,2.5,"F");doc.setTextColor(61,43,31);doc.setFont("helvetica","normal");doc.setFontSize(9);var pq=item.pergunta.length>62?item.pergunta.substring(0,59)+"...":item.pergunta;doc.text(pq,22,y+5.5);var rl=r==="cf"?"CONFORME":r==="nc"?"NAO CONFORME":r==="na"?"N/A":"—";doc.setFont("helvetica","bold");doc.setTextColor(dc[0],dc[1],dc[2]);doc.text(rl,198,y+5.5,{align:"right"});if(ob){doc.setTextColor(122,92,74);doc.setFont("helvetica","italic");doc.setFontSize(8);doc.text("Obs: "+ob.substring(0,70),22,y+11);}y+=h+2;if(fotos[idx]&&Array.isArray(fotos[idx])&&fotos[idx].length){fotos[idx].forEach(function(fd){if(y>215){doc.addPage();y=15;}try{doc.addImage(fd,"JPEG",14,y,55,44);}catch(e){}y+=48;});}});y+=4;});
   if(y>220){doc.addPage();y=15;}
   doc.setFillColor(250,248,245);doc.roundedRect(10,y,190,42,3,3,"F");
   doc.setDrawColor(200,180,170);doc.roundedRect(10,y,190,42,3,3,"S");
@@ -1184,6 +1590,7 @@ async function gerarPDF(loja,cl,score,respostas,obs,fotos,auditorNome,data,acomp
   if(y>240){doc.addPage();y=15;}doc.setFillColor(232,82,10);doc.rect(0,285,210,12,"F");
 doc.setTextColor(255,255,255);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text("LanLan - Sistema de Auditoria de Qualidade",105,292,{align:"center"});
   doc.save("auditoria_"+(loja.nome||"").replace(/\s/g,"_")+"_"+new Date().toISOString().slice(0,10)+".pdf");
+  }catch(err){ console.error("Erro ao gerar PDF:",err); showT("❌ Erro ao gerar PDF: "+err.message); }
 }
 </script>
 </body></html>
