@@ -1722,6 +1722,13 @@ function jaViuAvisoPDF(){
 
 /* Abre o modal correto antes de gerar PDF */
 function abrirAvisoPDF(audId){
+  // Se a auditoria tem backup no Drive, abre direto (sem gerar localmente)
+  var a=db.auditorias.find(function(x){return x.id==audId;});
+  if(a && a.pdfBackupUrl){
+    window.open(a.pdfBackupUrl, "_blank");
+    return;
+  }
+  // Fallback: gera localmente (auditorias antigas ou backup indisponível)
   _pdfAudId = audId;
   _pdfModo  = "hist";
   _abrirModalCorreto();
