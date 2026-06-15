@@ -451,7 +451,7 @@ input:checked+.toggle-slider:before{transform:translateX(20px)}
 
 <div class="moverlay" id="m-res"><div class="modal"><div class="mhandle"></div>
   <div class="mtitle">✅ Auditoria Concluída</div><div id="res-content"></div>
-  <div class="brow" style="margin-top:20px"><button class="btn btns" onclick="closeM('m-res')">Fechar</button><button class="btn btnp" style="flex:1" onclick="envWpp()">💬 Enviar WhatsApp</button></div>
+  <div class="brow" style="margin-top:20px"><button class="btn btns" onclick="closeM('m-res');cancelAud();updDash();">Fechar</button><button class="btn btnp" style="flex:1" onclick="envWpp()">💬 Enviar WhatsApp</button></div>
 </div></div>
 
 <div class="moverlay fullpage" id="m-view"><div class="modal" style="border-radius:0;max-height:100vh;padding-top:16px">
@@ -1605,6 +1605,8 @@ async function finAud(){
   await apiPost({action:"saveAuditoria",auditoria:aud});
   // Gera PDF automaticamente ao finalizar (sem modal de aviso)
   await gerarPDF(curAud.loja,curAud.checklist,score,curAud.respostas,curAud.obs,curAud.fotos,user.nome,curAud.data,curAud.acompanhante||'',curAud.sig_aud||null,curAud.sig_loja||null);
+  // Backup do PDF no Drive (não-bloqueante — não atrasa a finalização)
+  backupPDFDrive(aud, curAud.loja, curAud.checklist, score);
   // Envia e-mail automático se o checklist estiver configurado e a loja tiver e-mail
   if(curAud.checklist.enviaEmail && curAud.loja.email){
     await enviarEmailAuditoria(aud, curAud.loja, curAud.checklist, score);
@@ -1851,6 +1853,34 @@ function tamanhoBase64MB(b64){
 }
 
 /* Envia e-mail com PDF anexado, aplicando compressão em cascata */
+/* Faz backup do PDF (com fotos comprimidas a 60%) no Drive via Apps Script.
+   Roda em background — não bloqueia a finalização da auditoria. */
+function backupPDFDrive(aud, loja, cl, score){
+  (async function(){
+    try{
+      var fotos60 = await comprimirFotosFator(curAud.fotos||{}, 0.6);
+      var pdfB64 = gerarPDFBase64(loja, cl, score, aud.respostas, aud.obs, fotos60, aud.auditor, aud.data, aud.acompanhante||"", curAud.sig_aud||null, curAud.sig_loja||null);
+      if(!pdfB64) return;
+
+      var filename = "auditoria_"+(loja.nome||"").replace(/\s/g,"_")+"_"+new Date(aud.data).toISOString().slice(0,10)+"_"+aud.id+".pdf";
+
+      var res = await apiPost({
+        action:"backupPDF",
+        auditoriaId: aud.id,
+        pdfBase64: pdfB64,
+        pdfFilename: filename
+      });
+      if(res && res.ok){
+        console.log("Backup PDF salvo no Drive:", res.url);
+      } else {
+        console.warn("Backup PDF falhou:", res && res.error);
+      }
+    }catch(e){
+      console.warn("Erro no backup PDF (não crítico):", e);
+    }
+  })();
+}
+
 async function enviarEmailAuditoria(aud, loja, cl, score){
   try{
     var LIMITE_MB = 5;
