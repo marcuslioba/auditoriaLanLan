@@ -1172,7 +1172,9 @@ function renderWizard(cl,loja){
       html+="<div class='card' style='padding:14px;margin-bottom:10px'>";
       html+="<label class='flb' style='margin-bottom:6px'>✍️ Assinatura do Auditor</label>";
       html+="<p style='font-size:12px;color:var(--g400);margin-bottom:10px'>Assine com o dedo ou mouse — obrigatória</p>";
-      html+="<canvas id='wiz-sigc-aud' width='800' height='200' style='border:2px solid "+(audSigned?"var(--gn)":"var(--g200)")+";border-radius:12px;max-width:100%;width:100%;display:block;touch-action:none;cursor:crosshair;background:#FAFAFA'></canvas>";
+      html+="<div id='wiz-sig-aud-wrap' class='sig-wrap"+(audSigned?" signed":"")+"'>";
+      html+="<canvas id='wiz-sigc-aud' width='800' height='200' style='max-width:100%;width:100%;display:block;touch-action:none;cursor:crosshair'></canvas>";
+      html+="</div>";
       html+="<div style='display:flex;gap:8px;margin-top:8px'>";
       html+="<button class='btn btns btnsm' onclick='clearWizSig(\"aud\")'>🗑️ Limpar</button>";
       html+=""+(audSigned?"<span style='color:var(--gn);font-size:13px;font-weight:700;align-self:center'>✅ Assinado</span>":"");
@@ -1188,7 +1190,9 @@ function renderWizard(cl,loja){
         html+="<input type='text' class='finput' id='wiz-acomp' placeholder='Nome de quem acompanhou' value='"+esc(curAud.acompanhante||"")+"' oninput='curAud.acompanhante=this.value' style='margin-bottom:12px'>";
         html+="<label class='flb' style='margin-bottom:6px'>✍️ Assinatura do Acompanhante</label>";
         html+="<p style='font-size:12px;color:var(--g400);margin-bottom:10px'>Opcional</p>";
-        html+="<canvas id='wiz-sigc-loja' width='800' height='200' style='border:2px solid "+(curAud.sig_loja?"var(--gn)":"var(--g200)")+";border-radius:12px;max-width:100%;width:100%;display:block;touch-action:none;cursor:crosshair;background:#FAFAFA'></canvas>";
+        html+="<div id='wiz-sig-loja-wrap' class='sig-wrap"+(curAud.sig_loja?" signed":"")+"'>";
+        html+="<canvas id='wiz-sigc-loja' width='800' height='200' style='max-width:100%;width:100%;display:block;touch-action:none;cursor:crosshair'></canvas>";
+        html+="</div>";
         html+="<div style='display:flex;gap:8px;margin-top:8px'>";
         html+="<button class='btn btns btnsm' onclick='clearWizSig(\"loja\")'>🗑️ Limpar</button>";
         html+=""+(curAud.sig_loja?"<span style='color:var(--gn);font-size:13px;font-weight:700;align-self:center'>✅ Assinado</span>":"");
