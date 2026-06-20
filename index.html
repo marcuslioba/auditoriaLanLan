@@ -1773,19 +1773,32 @@ async function backupPDFDrive(aud, loja, cl, score){
 
     var filename = "auditoria_"+(loja.nome||"").replace(/\s/g,"_")+"_"+new Date(aud.data).toISOString().slice(0,10)+"_"+aud.id+".pdf";
 
-    var res = await apiPost({
-      action:"backupPDF",
-      auditoriaId: aud.id,
-      pdfBase64: pdfB64,
-      pdfFilename: filename
+    // Usa fetch com mode:'no-cors' para contornar o problema de CORS/redirect do Apps Script.
+    // Com no-cors o POST chega inteiro ao servidor (sem limite de URL como no fallback GET).
+    // A resposta é opaca (não podemos ler), então buscamos a URL salva depois via GET.
+    await fetch(APIURL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {"Content-Type": "text/plain"},
+      body: JSON.stringify({
+        action: "backupPDF",
+        auditoriaId: aud.id,
+        pdfBase64: pdfB64,
+        pdfFilename: filename
+      })
     });
-    if(res && res.ok){
+
+    // Aguarda o Apps Script processar e salvar a URL na planilha
+    await new Promise(function(r){ setTimeout(r, 6000); });
+
+    // Busca a URL salva via GET (GET funciona normalmente sem CORS)
+    var res = await apiGet({action: "getPdfUrl", auditoriaId: aud.id});
+    if(res && res.url){
       console.log("Backup PDF salvo no Drive:", res.url);
-      // Atualiza o link localmente para que o botão PDF já funcione sem recarregar
       var idx = db.auditorias.findIndex(function(a){ return a.id === aud.id; });
       if(idx >= 0){ db.auditorias[idx].pdfBackupUrl = res.url; cacheDB(); }
     } else {
-      console.warn("Backup PDF falhou:", res && res.error);
+      console.warn("Backup PDF: URL não recuperada após backup");
     }
   }catch(e){
     console.warn("Erro no backup PDF (não crítico):", e);
