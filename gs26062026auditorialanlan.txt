@@ -1,0 +1,402 @@
+// ============================================================
+// LANLAN AUDITORIA — Google Apps Script Backend v4
+// ============================================================
+// DEPLOY:
+// 1. script.google.com → abra o projeto existente
+// 2. Apague tudo e cole este código
+// 3. Implantar → Gerenciar implantações → Editar → Nova versão → Implantar
+// ============================================================
+
+const SHEET_ID = '1WTfACkU5bzH9qYbDJiEE3rQ9sjJwzj6OI2iPgnpnjlk';
+
+function getSpreadsheet() {
+  return SpreadsheetApp.openById(SHEET_ID);
+}
+
+// ============================================================
+// SCHEMAS — inclui Cargos e colunas novas de Auditorias
+// ============================================================
+function ensureSheets() {
+  const ss = getSpreadsheet();
+  const schemas = {
+    'Auditores':  ['id','nome','pin','cargo','acessoTotal','lojasPermitidas_json'],
+    'Lojas':      ['id','nome','endereco','lat','lng','whatsapp','email','responsavel'],
+    'Categorias': ['id','nome','emoji','peso'],
+    'Checklists': ['id','nome','descricao','cargosPermitidos_json','items_json','enviaEmail'],
+    'Auditorias': ['id','lojaId','checklistId','auditor','data','score',
+                   'respostas_json','obs_json','fotos_json','geoLat','geoLng',
+                   'acompanhante','sigAud','sigLoja','pdfBackupUrl'],   // ← novos campos
+    'Cargos':     ['id','nome','descricao']
+  };
+
+  Object.keys(schemas).forEach(name => {
+    let sheet = ss.getSheetByName(name);
+    if (!sheet) {
+      sheet = ss.insertSheet(name);
+      sheet.getRange(1,1,1,schemas[name].length).setValues([schemas[name]]);
+      return;
+    }
+    const firstCell = sheet.getLastRow() > 0 ? sheet.getRange(1,1).getValue() : '';
+    if (firstCell === '' || firstCell !== schemas[name][0]) {
+      sheet.getRange(1,1,1,schemas[name].length).setValues([schemas[name]]);
+    }
+  });
+}
+
+// ============================================================
+// RESPOSTA JSON
+// ============================================================
+function jsonResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================
+// GET
+// ============================================================
+function doGet(e) {
+  try {
+    ensureSheets();
+    const params = e.parameter || {};
+    if (params.payload) {
+      const body = JSON.parse(decodeURIComponent(params.payload));
+      return handleAction(body.action, body);
+    }
+    const action = params.action || 'getAll';
+    if (action === 'getAll') {
+      return jsonResponse({
+        auditores:  getSheetRowsAuditores(),
+        lojas:      getSheetRows('Lojas'),
+        categorias: getSheetRows('Categorias'),
+        checklists: getSheetRowsChecklists(),
+        auditorias: getSheetRowsAuditorias(),
+        cargos:     getSheetRows('Cargos')
+      });
+    }
+    return jsonResponse({ error: 'Unknown action: ' + action });
+  } catch(ex) {
+    return jsonResponse({ error: ex.message, stack: ex.stack });
+  }
+}
+
+// ============================================================
+// POST
+// ============================================================
+function doPost(e) {
+  try {
+    ensureSheets();
+    let body;
+    try { body = JSON.parse(e.postData.contents); }
+    catch(_) { body = e.parameter || {}; }
+    return handleAction(body.action, body);
+  } catch(ex) {
+    return jsonResponse({ error: ex.message });
+  }
+}
+
+// ============================================================
+// ROTEADOR
+// ============================================================
+function handleAction(action, body) {
+  switch(action) {
+    case 'saveAuditor': {
+      var a = body.auditor || {};
+      var audData = {
+        id: a.id, nome: a.nome, pin: a.pin, cargo: a.cargo,
+        acessoTotal: a.acessoTotal !== false ? true : false,
+        lojasPermitidas_json: JSON.stringify(a.lojasPermitidas || [])
+      };
+      return saveRow('Auditores', audData, ['id','nome','pin','cargo','acessoTotal','lojasPermitidas_json']);
+    }
+    case 'deleteAuditor':  return deleteRow('Auditores', body.id);
+    case 'saveLoja':       return saveRow('Lojas', body.loja, ['id','nome','endereco','lat','lng','whatsapp','email','responsavel']);
+    case 'deleteLoja':     return deleteRow('Lojas', body.id);
+    case 'saveCategoria':  return saveRow('Categorias', body.categoria, ['id','nome','emoji','peso']);
+    case 'deleteCategoria':return deleteRow('Categorias', body.id);
+    case 'saveCargo':      return saveRow('Cargos', body.cargo, ['id','nome','descricao']);
+    case 'deleteCargo':    return deleteRow('Cargos', body.id);
+    case 'saveChecklist':  return saveChecklist(body.checklist);
+    case 'deleteChecklist':return deleteRow('Checklists', body.id);
+    case 'saveAuditoria':  return saveAuditoria(body.auditoria);
+    case 'sendEmail':      return sendAuditEmail(body);
+    case 'backupPDF':      return backupPDF(body);
+    default:               return jsonResponse({ error: 'Action not found: ' + action });
+  }
+}
+
+// ============================================================
+// LEITURA
+// ============================================================
+function getSheetRowsAuditores() {
+  return getSheetRows('Auditores').map(function(row) {
+    // acessoTotal: vem como boolean ou string "true"/"false"
+    row.acessoTotal = row.acessoTotal !== false && row.acessoTotal !== 'false' && row.acessoTotal !== '';
+    try { row.lojasPermitidas = JSON.parse(row.lojasPermitidas_json || '[]'); }
+    catch(_) { row.lojasPermitidas = []; }
+    delete row.lojasPermitidas_json;
+    return row;
+  });
+}
+
+function getSheetRows(sheetName) {
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0];
+  return values.slice(1)
+    .filter(row => row[0] !== '' && row[0] !== null && row[0] !== undefined)
+    .map(row => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = row[i]; });
+      return obj;
+    });
+}
+
+function getSheetRowsChecklists() {
+  return getSheetRows('Checklists').map(row => {
+    try { row.items = JSON.parse(row.items_json || '[]'); } catch(_) { row.items = []; }
+    try { row.cargosPermitidos = JSON.parse(row.cargosPermitidos_json || '[]'); } catch(_) { row.cargosPermitidos = []; }
+    row.enviaEmail = row.enviaEmail === true || row.enviaEmail === 'true' || row.enviaEmail === 'TRUE';
+    delete row.items_json;
+    delete row.cargosPermitidos_json;
+    return row;
+  });
+}
+
+function getSheetRowsAuditorias() {
+  return getSheetRows('Auditorias').map(row => {
+    try { row.respostas = JSON.parse(row.respostas_json || '{}'); } catch(_) { row.respostas = {}; }
+    try { row.obs = JSON.parse(row.obs_json || '{}'); } catch(_) { row.obs = {}; }
+    try { row.fotos = JSON.parse(row.fotos_json || '{}'); } catch(_) { row.fotos = {}; }
+    delete row.respostas_json;
+    delete row.obs_json;
+    delete row.fotos_json;
+    return row;
+  });
+}
+
+// ============================================================
+// ESCRITA — genérica
+// ============================================================
+function saveRow(sheetName, data, fields) {
+  if (!data) return jsonResponse({ error: 'No data provided' });
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return jsonResponse({ error: 'Sheet not found: ' + sheetName });
+  const values = sheet.getDataRange().getValues();
+  const row = fields.map(f => {
+    const val = data[f];
+    return (val === null || val === undefined) ? '' : val;
+  });
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(data.id)) {
+      sheet.getRange(i+1,1,1,fields.length).setValues([row]);
+      return jsonResponse({ ok: true, action: 'updated', id: data.id });
+    }
+  }
+  sheet.appendRow(row);
+  return jsonResponse({ ok: true, action: 'inserted', id: data.id });
+}
+
+function saveChecklist(cl) {
+  if (!cl) return jsonResponse({ error: 'No checklist data' });
+  const data = {
+    id: cl.id, nome: cl.nome, descricao: cl.descricao || '',
+    cargosPermitidos_json: JSON.stringify(cl.cargosPermitidos || []),
+    items_json: JSON.stringify(cl.items || []),
+    enviaEmail: cl.enviaEmail === true
+  };
+  return saveRow('Checklists', data, ['id','nome','descricao','cargosPermitidos_json','items_json','enviaEmail']);
+}
+
+// ============================================================
+// ESCRITA — Auditoria (com acompanhante e assinaturas)
+// ============================================================
+function saveAuditoria(a) {
+  if (!a) return jsonResponse({ error: 'No auditoria data' });
+
+  // Fotos: salva contagem (base64 estouraria limite da célula)
+  const fotosRef = {};
+  if (a.fotos) {
+    Object.keys(a.fotos).forEach(k => {
+      fotosRef[k] = (a.fotos[k] || []).length + ' foto(s)';
+    });
+  }
+
+  // Assinaturas: salva indicador se foram feitas (base64 pode ser grande)
+  // Se quiser salvar a imagem completa, remova o ternário e use a.sigAud diretamente
+  const sigAudRef  = a.sigAud  ? 'assinado' : '';
+  const sigLojaRef = a.sigLoja ? 'assinado' : '';
+
+  const data = {
+    id:             a.id,
+    lojaId:         a.lojaId,
+    checklistId:    a.checklistId,
+    auditor:        a.auditor,
+    data:           a.data,
+    score:          a.score,
+    respostas_json: JSON.stringify(a.respostas || {}),
+    obs_json:       JSON.stringify(a.obs || {}),
+    fotos_json:     JSON.stringify(fotosRef),
+    geoLat:         a.geoLat || '',
+    geoLng:         a.geoLng || '',
+    acompanhante:   a.acompanhante || '',   // ← novo
+    sigAud:         sigAudRef,              // ← novo
+    sigLoja:        sigLojaRef              // ← novo
+  };
+
+  return saveRow('Auditorias', data, [
+    'id','lojaId','checklistId','auditor','data','score',
+    'respostas_json','obs_json','fotos_json','geoLat','geoLng',
+    'acompanhante','sigAud','sigLoja'
+  ]);
+}
+
+// ============================================================
+// EXCLUSÃO
+// ============================================================
+function deleteRow(sheetName, id) {
+  if (!id) return jsonResponse({ error: 'No id provided' });
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return jsonResponse({ error: 'Sheet not found' });
+  const values = sheet.getDataRange().getValues();
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(id)) {
+      sheet.deleteRow(i+1);
+      return jsonResponse({ ok: true, deleted: id });
+    }
+  }
+  return jsonResponse({ ok: false, error: 'Row not found', id: id });
+}
+
+// ============================================================
+// ENVIO DE E-MAIL — Relatório de auditoria com PDF anexado
+// ============================================================
+function sendAuditEmail(body) {
+  try {
+    var to = body.to;
+    if (!to) return jsonResponse({ error: 'Destinatário (to) não informado' });
+
+    var subject = body.subject || 'Relatório de Auditoria - LanLan';
+    var bodyText = body.body || '';
+    var fromAlias = 'lanlanfranchising@gmail.com';
+
+    var options = {};
+
+    // Verifica se o alias está disponível na conta antes de usá-lo
+    var aliases = GmailApp.getAliases();
+    if (aliases.indexOf(fromAlias) !== -1) {
+      options.from = fromAlias;
+    }
+    // Se o alias não estiver verificado, envia da conta padrão (sem erro)
+
+    // Anexa o PDF se fornecido
+    if (body.pdfBase64) {
+      var pdfBytes = Utilities.base64Decode(body.pdfBase64);
+      var pdfBlob = Utilities.newBlob(pdfBytes, 'application/pdf', body.pdfFilename || 'relatorio.pdf');
+      options.attachments = [pdfBlob];
+    }
+
+    GmailApp.sendEmail(to, subject, bodyText, options);
+
+    return jsonResponse({ ok: true, sentTo: to, from: options.from || 'default' });
+  } catch (ex) {
+    return jsonResponse({ error: 'Erro ao enviar e-mail: ' + ex.message });
+  }
+}
+
+// ============================================================
+// BACKUP DE PDFs NO GOOGLE DRIVE — retenção de 30 dias
+// ============================================================
+
+var PDF_BACKUP_FOLDER_NAME = 'LanLan_PDF_Backups';
+var PDF_RETENCAO_DIAS = 30;
+
+/* Retorna (ou cria) a pasta de backup de PDFs no Drive */
+function getPDFBackupFolder() {
+  var folders = DriveApp.getFoldersByName(PDF_BACKUP_FOLDER_NAME);
+  if (folders.hasNext()) return folders.next();
+  return DriveApp.createFolder(PDF_BACKUP_FOLDER_NAME);
+}
+
+/* Salva o PDF (base64) no Drive e grava o link na linha da auditoria */
+function backupPDF(body) {
+  try {
+    if (!body.auditoriaId || !body.pdfBase64) {
+      return jsonResponse({ error: 'auditoriaId e pdfBase64 são obrigatórios' });
+    }
+
+    var pdfBytes = Utilities.base64Decode(body.pdfBase64);
+    var pdfBlob = Utilities.newBlob(pdfBytes, 'application/pdf', body.pdfFilename || ('auditoria_' + body.auditoriaId + '.pdf'));
+
+    var folder = getPDFBackupFolder();
+    var file = folder.createFile(pdfBlob);
+    // Permite visualização via link (necessário para abrir o PDF depois)
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    var url = file.getUrl();
+
+    // Atualiza a coluna pdfBackupUrl na linha correspondente da auditoria
+    updateAuditoriaPDFUrl(body.auditoriaId, url);
+
+    return jsonResponse({ ok: true, url: url, fileId: file.getId() });
+  } catch (ex) {
+    return jsonResponse({ error: 'Erro no backup do PDF: ' + ex.message });
+  }
+}
+
+/* Atualiza apenas a coluna pdfBackupUrl de uma auditoria, sem afetar as demais colunas */
+function updateAuditoriaPDFUrl(auditoriaId, url) {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheetByName('Auditorias');
+  if (!sheet) return;
+
+  var values = sheet.getDataRange().getValues();
+  var headers = values[0];
+  var colIndex = headers.indexOf('pdfBackupUrl');
+  if (colIndex === -1) return; // coluna não existe (planilha não migrada)
+
+  for (var i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(auditoriaId)) {
+      sheet.getRange(i + 1, colIndex + 1).setValue(url);
+      return;
+    }
+  }
+}
+
+/* Remove PDFs de backup com mais de PDF_RETENCAO_DIAS dias.
+   Configurar como trigger diário: Extensões > Apps Script > Triggers (relógio)
+   > Adicionar gatilho > limparPDFsAntigos > Baseado em tempo > Timer diário */
+function limparPDFsAntigos() {
+  var folder = getPDFBackupFolder();
+  var files = folder.getFiles();
+  var limite = new Date();
+  limite.setDate(limite.getDate() - PDF_RETENCAO_DIAS);
+
+  var removidos = 0;
+  while (files.hasNext()) {
+    var file = files.next();
+    if (file.getDateCreated() < limite) {
+      file.setTrashed(true);
+      removidos++;
+    }
+  }
+  Logger.log('limparPDFsAntigos: ' + removidos + ' arquivo(s) removido(s)');
+  return removidos;
+}
+
+// ============================================================
+// DIAGNÓSTICO
+// ============================================================
+function diagnostico() {
+  ensureSheets();
+  const ss = getSpreadsheet();
+  Logger.log('=== DIAGNÓSTICO LANLAN v4 ===');
+  ['Auditores','Lojas','Categorias','Checklists','Auditorias','Cargos'].forEach(name => {
+    const sheet = ss.getSheetByName(name);
+    Logger.log(name + ': ' + (sheet ? Math.max(0,sheet.getLastRow()-1)+' registros' : 'NÃO ENCONTRADA'));
+  });
+}
